@@ -5,12 +5,6 @@ info:
   title: Human Being Collection API & Heroes API
   version: 1.0.0
   description: |
-    Комбинированная спецификация двух сервисов:
-    1) REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
-
-  title: Human Being Collection API
-  version: 1.0.0
-  description: |
     REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
 
 
@@ -30,17 +24,11 @@ info:
 
 
 
-
-
 servers:
   - url: http://localhost:8080/api/v1
     description: Локальный сервер разработки (1 сервис, коллекция)
   - url: http://localhost:8081
     description: Сервис Heroes
-
-servers:
-  - url: http://localhost:8080/api/v1
-    description: Локальный сервер разработки
 
 
 tags:
@@ -284,12 +272,12 @@ paths:
       responses:
         '200':
           description: Список объектов
-          contetn:
+          content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/chemas/HumanBeing'
+                  $ref: '#/components/schemas/HumanBeing'
   /human-beings/search/mood-greater:
     get:
       tags:
@@ -326,11 +314,11 @@ paths:
           in: path
           required: true
           schema: { type: integer }
-      respoonses:
+      responses:
         '200':
           description: Герой успешно добавлен
         '404':
-          description: Герой или команда не надены
+          description: Герой или команда не найдены
 
   /heroes/team/{team-id}/make-depressive:
     post:
