@@ -1,10 +1,18 @@
 openapi: 3.0.3
 
 info:
+
+  title: Human Being Collection API & Heroes API
+  version: 1.0.0
+  description: |
+    Комбинированная спецификация двух сервисов:
+    1) REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+
   title: Human Being Collection API
   version: 1.0.0
   description: |
     REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+
 
     Спецификация описывает базовые операции создания, чтения, полного обновления,
     удаления и получения списка объектов. Список поддерживает фильтрацию по любой
@@ -13,13 +21,37 @@ info:
     Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
     для чтения.
 
+
+    2) REST API веб-сервиса (Heroes) для управления составом команд и проведения групповых операций над героями.
+    
+    Спецификация описывает дополнительные функции, расширяющие возможности управления объектами HumanBeing через взаимодействие с первым сервисом. Реализованы операции формирования команд путём привязки существующих героев, а также инструменты массового изменения состояния — перевод всех участников выбранной команды в максимально депрессивное настроение.
+    
+    Для выполнения операций требуются валидные идентификаторы команд и объектов коллекции. Сервис выступает в роли оркестратора над базовым API коллекции.
+
+
+
+
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки (1 сервис, коллекция)
+  - url: http://localhost:8081
+    description: Сервис Heroes
+
 servers:
   - url: http://localhost:8080/api/v1
     description: Локальный сервер разработки
 
+
 tags:
   - name: Human beings
     description: Базовые операции с коллекцией объектов HumanBeing
+
+  - name: Human beings (Extra)
+    description: Дополнительные поисковые операции первого сервиса
+  - name: Heroes Service
+    description: Операции второго веб-сервиса (/heroes)
+
 
 paths:
   /human-beings:
@@ -221,6 +253,103 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  /human-beings/group-by-id:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Сгруппировать объекты по id
+      description: Возвращает количесвто элементов для каждого уникального id (так как id уникален, количесвто всегда будет 1).
+      responses:
+        '200':
+          description: Результат группировки
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  count: { type : integer }
+  /human-beings/search/name-prefix:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Поиск по префиксу имени
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список объектов
+          contetn:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/chemas/HumanBeing'
+  /human-beings/search/mood-greater:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Поиск по настроению больше заданного
+      description: Возвращает героев, чьё настроение "лучше" заданного (APATHY < CALM < FRENZY).
+      parameters:
+        - name: mood
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Mood'
+      responses:
+        '200':
+          description: Список объектов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HumanBeing'
+
+  /heroes/team/{team-id}/add/{hero-id}:
+    post:
+      tags:
+        - Heroes Service
+      summary: Добавить героя в команду
+      parameters:
+        - name: team-id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: hero-id
+          in: path
+          required: true
+          schema: { type: integer }
+      respoonses:
+        '200':
+          description: Герой успешно добавлен
+        '404':
+          description: Герой или команда не надены
+
+  /heroes/team/{team-id}/make-depressive:
+    post:
+      tags:
+        - Heroes Service
+      summary: Сделать всех героев команды депрессивными
+      description: Устанавливает настроение APATHY всем героям  указанной команде.
+      parameters:
+        - name: team-id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Операция выполнена
+        '404': 
+         description: Команда не найдена
+
+
 
 components:
   parameters:
