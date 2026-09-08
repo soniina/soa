@@ -1,0 +1,771 @@
+openapi: 3.0.3
+
+info:
+  title: Human Being Collection API & Heroes API
+  version: 1.0.0
+  description: |
+    Комбинированная спецификация двух сервисов:
+    1) REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+
+    Спецификация описывает базовые операции создания, чтения, полного обновления,
+    удаления и получения списка объектов. Список поддерживает фильтрацию по любой
+    комбинации полей, многополевую сортировку и постраничный вывод.
+
+    Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
+    для чтения.
+
+    2) REST API веб-сервиса (Heroes) для управления составом команд и проведения групповых операций над героями.
+    
+    Спецификация описывает дополнительные функции, расширяющие возможности управления объектами HumanBeing через взаимодействие с первым сервисом. Реализованы операции формирования команд путём привязки существующих героев, а также инструменты массового изменения состояния — перевод всех участников выбранной команды в максимально депрессивное настроение.
+    
+    Для выполнения операций требуются валидные идентификаторы команд и объектов коллекции. Сервис выступает в роли оркестратора над базовым API коллекции.
+
+
+
+
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки (1 сервис, коллекция)
+  - url: http://localhost:8081
+    description: Сервис Heroes
+
+tags:
+  - name: Human beings
+    description: Базовые операции с коллекцией объектов HumanBeing
+  - name: Human beings (Extra)
+    description: Дополнительные поисковые операции первого сервиса
+  - name: Heroes Service
+    description: Операции второго веб-сервиса (/heroes)
+
+paths:
+  /human-beings:
+    get:
+      tags:
+        - Human beings
+      summary: Получить список объектов
+      description: |
+        Возвращает страницу коллекции `HumanBeing` в виде JSON-массива.
+
+        Все указанные параметры фильтрации объединяются логической операцией `AND`.
+        Фильтрация выполняется по точному совпадению. Параметр `sort` можно передать
+        несколько раз; порядок параметров определяет приоритет полей сортировки.
+
+        Пример:
+        `GET /human-beings?page=1&size=20&mood=CALM&car.cool=true&sort=name,asc&sort=id,desc`.
+      operationId: getHumanBeings
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/FilterId'
+        - $ref: '#/components/parameters/FilterName'
+        - $ref: '#/components/parameters/FilterCoordinatesX'
+        - $ref: '#/components/parameters/FilterCoordinatesY'
+        - $ref: '#/components/parameters/FilterCreationDate'
+        - $ref: '#/components/parameters/FilterRealHero'
+        - $ref: '#/components/parameters/FilterHasToothpick'
+        - $ref: '#/components/parameters/FilterImpactSpeed'
+        - $ref: '#/components/parameters/FilterWeaponType'
+        - $ref: '#/components/parameters/FilterMood'
+        - $ref: '#/components/parameters/FilterCarCool'
+      responses:
+        '200':
+          description: Страница коллекции успешно получена
+          headers:
+            X-Total-Count:
+              description: Общее количество объектов, соответствующих указанным фильтрам
+              schema:
+                type: integer
+                format: int64
+                minimum: 0
+              example: 47
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HumanBeing'
+              examples:
+                page:
+                  summary: Пример страницы результата
+                  value:
+                    - id: 42
+                      name: Alice
+                      coordinates:
+                        x: 15
+                        y: -12.5
+                      creationDate: '2026-09-07'
+                      realHero: true
+                      hasToothpick: false
+                      impactSpeed: 120.5
+                      weaponType: HAMMER
+                      mood: CALM
+                      car:
+                        cool: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Human beings
+      summary: Добавить новый объект
+      description: |
+        Создаёт новый объект `HumanBeing`. 
+        
+        Клиент передаёт все изменяемые поля объекта в формате JSON. Значения `id` 
+        и `creationDate` сервис генерирует автоматически.
+      operationId: createHumanBeing
+      requestBody:
+        required: true
+        description: Данные создаваемого объекта
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HumanBeingRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/HumanBeingRequestExample'
+      responses:
+        '201':
+          description: Объект успешно создан
+          headers:
+            Location:
+              description: URI созданного ресурса
+              required: true
+              schema:
+                type: string
+                format: uri-reference
+              example: /api/v1/human-beings/42
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HumanBeing'
+              examples:
+                created:
+                  $ref: '#/components/examples/HumanBeingExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /human-beings/{id}:
+    parameters:
+      - $ref: '#/components/parameters/HumanBeingId'
+
+    get:
+      tags:
+        - Human beings
+      summary: Получить объект по идентификатору
+      description: Возвращает объект `HumanBeing` с указанным положительным идентификатором.
+      operationId: getHumanBeingById
+      responses:
+        '200':
+          description: Объект найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HumanBeing'
+              examples:
+                found:
+                  $ref: '#/components/examples/HumanBeingExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Human beings
+      summary: Полностью обновить объект
+      description: |
+        Полностью заменяет изменяемые поля существующего объекта. Идентификатор
+        берётся из URL, а `id` и `creationDate` существующего объекта не изменяются.
+      operationId: updateHumanBeing
+      requestBody:
+        required: true
+        description: Новые значения всех изменяемых полей объекта
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HumanBeingRequest'
+            examples:
+              default:
+                $ref: '#/components/examples/HumanBeingRequestExample'
+      responses:
+        '200':
+          description: Объект успешно обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HumanBeing'
+              examples:
+                updated:
+                  $ref: '#/components/examples/HumanBeingExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Human beings
+      summary: Удалить объект
+      description: Удаляет из коллекции объект `HumanBeing` с указанным идентификатором.
+      operationId: deleteHumanBeing
+      responses:
+        '204':
+          description: Объект успешно удалён; тело ответа отсутствует
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /human-beings/group-by-id:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Сгруппировать объекты по id
+      description: Возвращает количесвто элементов для каждого уникального id (так как id уникален, количесвто всегда будет 1).
+      responses:
+        '200':
+          description: Результат группировки
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  count: { type : integer }
+  /human-beings/search/name-prefix:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Поиск по префиксу имени
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список объектов
+          contetn:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/chemas/HumanBeing'
+  /human-beings/search/mood-greater:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Поиск по настроению больше заданного
+      description: Возвращает героев, чьё настроение "лучше" заданного (APATHY < CALM < FRENZY).
+      parameters:
+        - name: mood
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Mood'
+      responses:
+        '200':
+          description: Список объектов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HumanBeing'
+
+  /heroes/team/{team-id}/add/{hero-id}:
+    post:
+      tags:
+        - Heroes Service
+      summary: Добавить героя в команду
+      parameters:
+        - name: team-id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: hero-id
+          in: path
+          required: true
+          schema: { type: integer }
+      respoonses:
+        '200':
+          description: Герой успешно добавлен
+        '404':
+          description: Герой или команда не надены
+
+  /heroes/team/{team-id}/make-depressive:
+    post:
+      tags:
+        - Heroes Service
+      summary: Сделать всех героев команды депрессивными
+      description: Устанавливает настроение APATHY всем героям  указанной команде.
+      parameters:
+        - name: team-id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Операция выполнена
+        '404': 
+         description: Команда не найдена
+
+
+components:
+  parameters:
+    HumanBeingId:
+      name: id
+      in: path
+      required: true
+      description: Уникальный положительный идентификатор объекта HumanBeing
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 42
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Номер страницы, начиная с 1
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    PageSize:
+      name: size
+      in: query
+      required: false
+      description: Количество объектов на странице
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+    Sort:
+      name: sort
+      in: query
+      required: false
+      description: |
+        Критерии сортировки в формате `поле,направление`. Допустимые направления:
+        `asc` и `desc`. Для многополевой сортировки параметр передаётся несколько раз.
+        Допустимые поля: `id`, `name`, `coordinates.x`, `coordinates.y`,
+        `creationDate`, `realHero`, `hasToothpick`, `impactSpeed`, `weaponType`,
+        `mood`, `car.cool`.
+      style: form
+      explode: true
+      schema:
+        type: array
+        default:
+          - id,asc
+        items:
+          type: string
+          pattern: '^(id|name|coordinates\.x|coordinates\.y|creationDate|realHero|hasToothpick|impactSpeed|weaponType|mood|car\.cool),(asc|desc)$'
+      example:
+        - name,asc
+        - id,desc
+
+    FilterId:
+      name: id
+      in: query
+      required: false
+      description: Отобрать объект с указанным идентификатором
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 42
+
+    FilterName:
+      name: name
+      in: query
+      required: false
+      description: Отобрать объекты с точно совпадающим именем
+      schema:
+        type: string
+        minLength: 1
+      example: Alice
+
+    FilterCoordinatesX:
+      name: coordinates.x
+      in: query
+      required: false
+      description: Отобрать объекты по координате x
+      schema:
+        type: integer
+        format: int32
+      example: 15
+
+    FilterCoordinatesY:
+      name: coordinates.y
+      in: query
+      required: false
+      description: Отобрать объекты по координате y
+      schema:
+        type: number
+        format: float
+        minimum: -171
+        exclusiveMinimum: true
+      example: -12.5
+
+    FilterCreationDate:
+      name: creationDate
+      in: query
+      required: false
+      description: Отобрать объекты по дате создания
+      schema:
+        type: string
+        format: date
+      example: '2026-09-07'
+
+    FilterRealHero:
+      name: realHero
+      in: query
+      required: false
+      description: Отобрать объекты по признаку настоящего героя
+      schema:
+        type: boolean
+      example: true
+
+    FilterHasToothpick:
+      name: hasToothpick
+      in: query
+      required: false
+      description: Отобрать объекты по наличию зубочистки
+      schema:
+        type: boolean
+      example: false
+
+    FilterImpactSpeed:
+      name: impactSpeed
+      in: query
+      required: false
+      description: Отобрать объекты по скорости удара
+      schema:
+        type: number
+        format: float
+        maximum: 465
+      example: 120.5
+
+    FilterWeaponType:
+      name: weaponType
+      in: query
+      required: false
+      description: Отобрать объекты по типу оружия
+      schema:
+        $ref: '#/components/schemas/WeaponType'
+      example: HAMMER
+
+    FilterMood:
+      name: mood
+      in: query
+      required: false
+      description: Отобрать объекты по настроению
+      schema:
+        $ref: '#/components/schemas/Mood'
+      example: CALM
+
+    FilterCarCool:
+      name: car.cool
+      in: query
+      required: false
+      description: Отобрать объекты по признаку крутой машины
+      schema:
+        type: boolean
+      example: true
+
+  schemas:
+    HumanBeingRequest:
+      type: object
+      description: |
+        Изменяемые данные объекта HumanBeing. Поля `id` и `creationDate` отсутствуют,
+        поскольку генерируются сервисом автоматически.
+      required:
+        - name
+        - coordinates
+        - realHero
+        - hasToothpick
+        - impactSpeed
+        - weaponType
+        - mood
+        - car
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Непустое имя объекта
+          example: Alice
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        realHero:
+          type: boolean
+          description: Является ли объект настоящим героем
+          example: true
+        hasToothpick:
+          type: boolean
+          description: Есть ли у объекта зубочистка
+          example: false
+        impactSpeed:
+          type: number
+          format: float
+          maximum: 465
+          description: Скорость удара, не превышающая 465
+          example: 120.5
+        weaponType:
+          $ref: '#/components/schemas/WeaponType'
+        mood:
+          $ref: '#/components/schemas/Mood'
+        car:
+          $ref: '#/components/schemas/Car'
+
+    HumanBeing:
+      type: object
+      description: Полное представление объекта HumanBeing
+      required:
+        - id
+        - name
+        - coordinates
+        - creationDate
+        - realHero
+        - hasToothpick
+        - impactSpeed
+        - weaponType
+        - mood
+        - car
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          readOnly: true
+          description: Уникальный идентификатор, автоматически генерируемый сервисом
+          example: 42
+        name:
+          type: string
+          minLength: 1
+          description: Непустое имя объекта
+          example: Alice
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        creationDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Дата создания, автоматически устанавливаемая сервисом
+          example: '2026-09-07'
+        realHero:
+          type: boolean
+          description: Является ли объект настоящим героем
+          example: true
+        hasToothpick:
+          type: boolean
+          description: Есть ли у объекта зубочистка
+          example: false
+        impactSpeed:
+          type: number
+          format: float
+          maximum: 465
+          description: Скорость удара, не превышающая 465
+          example: 120.5
+        weaponType:
+          $ref: '#/components/schemas/WeaponType'
+        mood:
+          $ref: '#/components/schemas/Mood'
+        car:
+          $ref: '#/components/schemas/Car'
+
+    Coordinates:
+      type: object
+      description: Координаты объекта
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+          format: int32
+          description: Координата x
+          example: 15
+        y:
+          type: number
+          format: float
+          minimum: -171
+          exclusiveMinimum: true
+          description: Координата y, строго превышающая -171
+          example: -12.5
+
+    Car:
+      type: object
+      description: Автомобиль героя
+      required:
+        - cool
+      properties:
+        cool:
+          type: boolean
+          description: Является ли автомобиль крутым
+          example: true
+
+    WeaponType:
+      type: string
+      description: Тип оружия героя
+      enum:
+        - HAMMER
+        - KNIFE
+        - BAT
+      example: HAMMER
+
+    Mood:
+      type: string
+      description: Настроение героя
+      enum:
+        - APATHY
+        - CALM
+        - FRENZY
+      example: CALM
+
+    ErrorResponse:
+      type: object
+      description: Унифицированное описание ошибки API
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Понятное клиенту описание ошибки
+          example: Переданные данные нарушают ограничения целостности
+        violations:
+          type: array
+          description: Нарушения валидации отдельных параметров или полей
+          items:
+            $ref: '#/components/schemas/FieldViolation'
+
+    FieldViolation:
+      type: object
+      description: Описание нарушения ограничения отдельного поля
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: Имя некорректного поля или параметра
+          example: impactSpeed
+        message:
+          type: string
+          description: Причина отклонения значения
+          example: Значение должно быть меньше или равно 465
+
+  responses:
+    BadRequest:
+      description: Запрос имеет неверный синтаксис или содержит некорректные URL-параметры
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Параметр page должен быть целым числом не меньше 1
+            violations:
+              - field: page
+                message: Значение должно быть не меньше 1
+
+    NotFound:
+      description: Объект с указанным идентификатором не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: HumanBeing с идентификатором 42 не найден
+
+    UnsupportedMediaType:
+      description: Формат тела запроса отличен от application/json
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Поддерживается только Content-Type application/json
+
+    UnprocessableEntity:
+      description: JSON корректен, но данные нарушают ограничения целостности модели
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Переданные данные нарушают ограничения целостности
+            violations:
+              - field: coordinates.y
+                message: Значение должно быть больше -171
+              - field: impactSpeed
+                message: Значение должно быть меньше или равно 465
+
+    InternalServerError:
+      description: Непредвиденная внутренняя ошибка сервиса
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Произошла внутренняя ошибка сервиса
+
+  examples:
+    HumanBeingRequestExample:
+      summary: Данные для создания или полного обновления объекта
+      value:
+        name: Alice
+        coordinates:
+          x: 15
+          y: -12.5
+        realHero: true
+        hasToothpick: false
+        impactSpeed: 120.5
+        weaponType: HAMMER
+        mood: CALM
+        car:
+          cool: true
+
+    HumanBeingExample:
+      summary: Полное представление объекта
+      value:
+        id: 42
+        name: Alice
+        coordinates:
+          x: 15
+          y: -12.5
+        creationDate: '2026-09-07'
+        realHero: true
+        hasToothpick: false
+        impactSpeed: 120.5
+        weaponType: HAMMER
+        mood: CALM
+        car:
+          cool: true
