@@ -1,11 +1,18 @@
 openapi: 3.0.3
 
 info:
+
   title: Human Being Collection API & Heroes API
   version: 1.0.0
   description: |
     Комбинированная спецификация двух сервисов:
     1) REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+
+  title: Human Being Collection API
+  version: 1.0.0
+  description: |
+    REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+
 
     Спецификация описывает базовые операции создания, чтения, полного обновления,
     удаления и получения списка объектов. Список поддерживает фильтрацию по любой
@@ -13,6 +20,7 @@ info:
 
     Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
     для чтения.
+
 
     2) REST API веб-сервиса (Heroes) для управления составом команд и проведения групповых операций над героями.
     
@@ -30,13 +38,20 @@ servers:
   - url: http://localhost:8081
     description: Сервис Heroes
 
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки
+
+
 tags:
   - name: Human beings
     description: Базовые операции с коллекцией объектов HumanBeing
+
   - name: Human beings (Extra)
     description: Дополнительные поисковые операции первого сервиса
   - name: Heroes Service
     description: Операции второго веб-сервиса (/heroes)
+
 
 paths:
   /human-beings:
@@ -238,6 +253,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
   /human-beings/group-by-id:
     get:
       tags:
@@ -332,6 +348,7 @@ paths:
           description: Операция выполнена
         '404': 
          description: Команда не найдена
+
 
 
 components:
