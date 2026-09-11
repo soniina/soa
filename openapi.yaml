@@ -19,7 +19,7 @@ info:
        Сервис выступает в роли оркестратора над API коллекции.
 
 servers:
-  - url: https://se.ifmo.ru/~s408391/api
+  - url: https://se.ifmo.ru/~s408391/
     description: Helios
 
 tags:
@@ -121,6 +121,8 @@ paths:
                     message: "Номер страницы должен быть не меньше 1"
                   - field: "sort"
                     message: "Неизвестное поле сортировки height"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/EndpointNotFound'
         '500':
@@ -172,6 +174,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Тело запроса содержит некорректный JSON"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/EndpointNotFound'
         '415':
@@ -223,6 +227,8 @@ paths:
                 violations:
                   - field: "id"
                     message: "Ожидается положительное целое число, получено abc"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -274,6 +280,8 @@ paths:
                     violations:
                       - field: id
                         message: Ожидается положительное целое число, получено abc
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '415':
@@ -314,6 +322,8 @@ paths:
                 violations:
                   - field: "id"
                     message: "Значение должно быть больше 0, получено 0"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -365,6 +375,8 @@ paths:
                 violations:
                   - field: "mood"
                     message: "Допустимы LONGING, GLOOM, APATHY, FRENZY"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/EndpointNotFound'
         '500':
@@ -421,6 +433,8 @@ paths:
                 violations:
                   - field: "substring"
                     message: "Обязательный параметр substring отсутствует"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/EndpointNotFound'
         '500':
@@ -491,6 +505,8 @@ paths:
                 violations:
                   - field: "prefix"
                     message: "Укажите хотя бы один символ"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/EndpointNotFound'
         '500':
@@ -539,6 +555,8 @@ paths:
                 violations:
                   - field: "hero-id"
                     message: "Ожидается положительное целое число, получено abc"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: Команда, участник или URL не найдены
           content:
@@ -607,6 +625,8 @@ paths:
                 violations:
                   - field: "team-id"
                     message: "Значение должно быть больше 0, получено 0"
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: Команда или URL не найдены
           content:
@@ -982,6 +1002,18 @@ components:
           items:
             $ref: '#/components/schemas/FieldViolation'
 
+    ForbiddenPage:
+      type: string
+      description: HTML-страница ошибки 403
+      example: |
+        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+        <html><head>
+        <title>403 Forbidden</title>
+        </head><body>
+        <h1>Forbidden</h1>
+        <p>Access denied.</p>
+        </body></html>
+
     NotFoundPage:
       type: string
       description: HTML-страница ошибки 404
@@ -1011,6 +1043,18 @@ components:
           example: Значение должно быть больше -193
 
   responses:
+    Forbidden:
+      description: Доступ запрещён
+      content:
+        text/html:
+          schema:
+            $ref: '#/components/schemas/ForbiddenPage'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Доступ запрещён
+
     EndpointNotFound:
       description: Запрошенный URL не найден
       content:
