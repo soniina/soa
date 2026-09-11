@@ -19,7 +19,7 @@ info:
        Сервис выступает в роли оркестратора над API коллекции.
 
 servers:
-  - url: https://se.ifmo.ru/~s408391/
+  - url: https://se.ifmo.ru/~s408391/api
     description: Helios
 
 tags:
