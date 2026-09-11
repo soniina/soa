@@ -2,7 +2,7 @@ openapi: 3.0.3
 
 info:
   title: Human Being Collection API & Heroes API
-  version: 1.2.0
+  version: 1.2.1
   description: |
     Спецификация описывает два REST API.
 
@@ -374,11 +374,11 @@ paths:
         - Heroes Service
       summary: Пересадить героев команды без машины на красные Lada Kalina
       description: |
-        Для целей этого API герой считается не имеющим автомобиля, если `car.name`
-        является пустой строкой. Для каждого такого героя операция устанавливает
-        `car.name` в значение `Красная Lada Kalina`. Значение `car.cool` не изменяется,
-        поскольку требуемое значение этого поля в задании не определено. Герои с
-        непустым `car.name` не изменяются.
+        Для каждого героя команды `team-id`, который согласно внутренним данным
+        сервиса Heroes не имеет автомобиля, операция устанавливает `car.name`
+        в значение `Красная Lada Kalina`. Значение `car.cool` не изменяется,
+        поскольку требуемое значение этого поля в задании не определено.
+        Герои, уже имеющие автомобиль, не изменяются.
       operationId: addCarToTeamHeroesWithoutCar
       parameters:
         - name: team-id
@@ -573,10 +573,10 @@ components:
       name: car.name
       in: query
       required: false
-      allowEmptyValue: true
       description: Отобрать объекты по названию автомобиля
       schema:
         type: string
+        minLength: 1
       example: Lada Kalina
 
     FilterCarCool:
@@ -721,9 +721,9 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
           description: |
-            Название автомобиля (не может быть null). Пустая строка означает,
-            что у героя нет автомобиля
+            Обязательное непустое название автомобиля
           example: Lada Kalina
         cool:
           type: boolean
