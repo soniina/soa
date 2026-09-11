@@ -121,6 +121,8 @@ paths:
                     message: "Номер страницы должен быть не меньше 1"
                   - field: "sort"
                     message: "Неизвестное поле сортировки height"
+        '404':
+          $ref: '#/components/responses/EndpointNotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -170,6 +172,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: "Тело запроса содержит некорректный JSON"
+        '404':
+          $ref: '#/components/responses/EndpointNotFound'
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
         '422':
@@ -361,6 +365,8 @@ paths:
                 violations:
                   - field: "mood"
                     message: "Допустимы LONGING, GLOOM, APATHY, FRENZY"
+        '404':
+          $ref: '#/components/responses/EndpointNotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -415,6 +421,8 @@ paths:
                 violations:
                   - field: "substring"
                     message: "Обязательный параметр substring отсутствует"
+        '404':
+          $ref: '#/components/responses/EndpointNotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -483,6 +491,8 @@ paths:
                 violations:
                   - field: "prefix"
                     message: "Укажите хотя бы один символ"
+        '404':
+          $ref: '#/components/responses/EndpointNotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -530,8 +540,11 @@ paths:
                   - field: "hero-id"
                     message: "Ожидается положительное целое число, получено abc"
         '404':
-          description: Команда или участник не найдены
+          description: Команда, участник или URL не найдены
           content:
+            text/html:
+              schema:
+                $ref: '#/components/schemas/NotFoundPage'
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
@@ -595,8 +608,11 @@ paths:
                   - field: "team-id"
                     message: "Значение должно быть больше 0, получено 0"
         '404':
-          description: Команда не найдена
+          description: Команда или URL не найдены
           content:
+            text/html:
+              schema:
+                $ref: '#/components/schemas/NotFoundPage'
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
@@ -966,6 +982,18 @@ components:
           items:
             $ref: '#/components/schemas/FieldViolation'
 
+    NotFoundPage:
+      type: string
+      description: HTML-страница ошибки 404
+      example: |
+        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+        <html><head>
+        <title>404 Not Found</title>
+        </head><body>
+        <h1>Not Found</h1>
+        <p>The requested URL was not found on this server.</p>
+        </body></html>
+
     FieldViolation:
       type: object
       description: Описание нарушения ограничения отдельного поля
@@ -983,9 +1011,19 @@ components:
           example: Значение должно быть больше -193
 
   responses:
-    NotFound:
-      description: Объект с указанным идентификатором не найден
+    EndpointNotFound:
+      description: Запрошенный URL не найден
       content:
+        text/html:
+          schema:
+            $ref: '#/components/schemas/NotFoundPage'
+
+    NotFound:
+      description: Объект или URL не найдены
+      content:
+        text/html:
+          schema:
+            $ref: '#/components/schemas/NotFoundPage'
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
