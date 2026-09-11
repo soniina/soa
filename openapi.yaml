@@ -18,12 +18,6 @@ info:
        массовой пересадки героев команды без автомобиля на красные `Lada Kalina`.
        Сервис выступает в роли оркестратора над API коллекции.
 
-servers:
-  - url: http://localhost:8080/api/v1
-    description: Локальный сервер управления коллекцией HumanBeing
-  - url: http://localhost:8081
-    description: Локальный сервер Heroes
-
 tags:
   - name: Human beings
     description: Базовые операции с коллекцией объектов HumanBeing
