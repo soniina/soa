@@ -1,20 +1,10 @@
 openapi: 3.0.3
 
-# При недоступности сети HTTP-код и JSON-ответ от сервиса отсутствуют.
-# Примеры должны соответствовать операциям и использовать согласованные ID.
-
-
 info:
   title: Human Being Collection API & Heroes API
   version: 1.2.2
   description: |
     Спецификация описывает два REST API.
-
-    Примеры демонстрируют контракт и не являются данными работающего сервера.
-    Для Try it out необходимо запустить соответствующий сервис и выбрать его
-    адрес в servers. localhost означает компьютер, на котором открыт браузер.
-    При сетевой ошибке HTTP-ответ может отсутствовать, а при блокировке CORS —
-    быть недоступным браузеру. Такой сбой не является JSON-ошибкой ErrorResponse.
 
     1. Сервис управления коллекцией объектов `HumanBeing`: базовые операции
        создания, чтения, полного обновления, удаления и получения списка, а также
@@ -91,58 +81,48 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
-              examples:
-                result:
-                  summary: Два героя с mood=FRENZY и car.cool=true
-                  value:
-                    -
-                      id: 101
-                      name: "Alice"
-                      coordinates:
-                        x: 120.5
-                        y: 45.5
-                      creationDate: "2026-09-07T21:15:00"
-                      realHero: true
-                      hasToothpick: false
-                      impactSpeed: 120.5
-                      weaponType: "PISTOL"
-                      mood: "FRENZY"
-                      car:
-                        name: "Lada Kalina"
-                        cool: true
-                    -
-                      id: 102
-                      name: "Alina"
-                      coordinates:
-                        x: 50
-                        y: 80
-                      creationDate: "2026-09-07T21:15:00"
-                      realHero: true
-                      hasToothpick: false
-                      impactSpeed: 120.5
-                      weaponType: "BAT"
-                      mood: "FRENZY"
-                      car:
-                        name: "Volvo XC60"
-                        cool: true
+              example:
+                - id: 101
+                  name: "Alice"
+                  coordinates:
+                    x: 120.5
+                    y: 45.5
+                  creationDate: "2026-09-07T21:15:00"
+                  realHero: true
+                  hasToothpick: false
+                  impactSpeed: 120.5
+                  weaponType: "PISTOL"
+                  mood: "FRENZY"
+                  car:
+                    name: "Lada Kalina"
+                    cool: true
+                - id: 102
+                  name: "Alina"
+                  coordinates:
+                    x: 50
+                    y: 80
+                  creationDate: "2026-09-07T21:15:00"
+                  realHero: true
+                  hasToothpick: false
+                  impactSpeed: 120.5
+                  weaponType: "BAT"
+                  mood: "FRENZY"
+                  car:
+                    name: "Volvo XC60"
+                    cool: true
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Некорректные параметры выборки"
-                    violations:
-                      -
-                        field: "page"
-                        message: "Номер страницы должен быть не меньше 1"
-                      -
-                        field: "sort"
-                        message: "Неизвестное поле сортировки height"
+              example:
+                message: "Некорректные параметры выборки"
+                violations:
+                  - field: "page"
+                    message: "Номер страницы должен быть не меньше 1"
+                  - field: "sort"
+                    message: "Неизвестное поле сортировки height"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -185,16 +165,13 @@ paths:
                 created:
                   $ref: '#/components/examples/CreatedHumanBeingExample'
         '400':
-          description: Некорректный запрос
+          description: Некорректный JSON или отсутствующее тело запроса
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Тело запроса содержит некорректный JSON"
+              example:
+                message: "Тело запроса содержит некорректный JSON"
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
         '422':
@@ -203,18 +180,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidFields:
-                  summary: Пустые имена при создании
-                  value:
-                    message: "Объект не прошёл проверку полей"
-                    violations:
-                      -
-                        field: "name"
-                        message: "Имя не может быть пустым"
-                      -
-                        field: "car.name"
-                        message: "Название автомобиля не может быть пустым"
+              example:
+                message: "Объект не прошёл проверку полей"
+                violations:
+                  - field: "name"
+                    message: "Имя не может быть пустым"
+                  - field: "car.name"
+                    message: "Название автомобиля не может быть пустым"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -239,20 +211,16 @@ paths:
                 found:
                   $ref: '#/components/examples/HumanBeingExample'
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Некорректный идентификатор объекта"
-                    violations:
-                      -
-                        field: "id"
-                        message: "Ожидается положительное целое число, получено abc"
+              example:
+                message: "Некорректный идентификатор объекта"
+                violations:
+                  - field: "id"
+                    message: "Ожидается положительное целое число, получено abc"
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -287,16 +255,23 @@ paths:
                 updated:
                   $ref: '#/components/examples/UpdatedHumanBeingExample'
         '400':
-          description: Некорректный запрос
+          description: Некорректный JSON или отсутствующее тело запроса; неверный параметр id
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidRequest:
-                  summary: Пример ошибки для этой операции
+                  summary: Нарушен синтаксис JSON
                   value:
                     message: "Тело запроса содержит некорректный JSON"
+                invalidId:
+                  summary: Некорректный идентификатор обновляемого объекта
+                  value:
+                    message: Некорректный параметр id
+                    violations:
+                      - field: id
+                        message: Ожидается положительное целое число, получено abc
         '404':
           $ref: '#/components/responses/NotFound'
         '415':
@@ -307,18 +282,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidFields:
-                  summary: Недопустимые числовые значения при обновлении
-                  value:
-                    message: "Объект не прошёл проверку полей"
-                    violations:
-                      -
-                        field: "coordinates.y"
-                        message: "Значение 914 превышает максимум 913"
-                      -
-                        field: "impactSpeed"
-                        message: "Значение -193 должно быть строго больше -193"
+              example:
+                message: "Объект не прошёл проверку полей"
+                violations:
+                  - field: "coordinates.y"
+                    message: "Значение 914 превышает максимум 913"
+                  - field: "impactSpeed"
+                    message: "Значение -193 должно быть строго больше -193"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -332,20 +302,16 @@ paths:
         '204':
           description: Объект успешно удалён; тело ответа отсутствует
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Некорректный идентификатор удаляемого объекта"
-                    violations:
-                      -
-                        field: "id"
-                        message: "Значение должно быть больше 0, получено 0"
+              example:
+                message: "Некорректный идентификатор удаляемого объекта"
+                violations:
+                  - field: "id"
+                    message: "Значение должно быть больше 0, получено 0"
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -387,20 +353,18 @@ paths:
               example:
                 count: 3
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Неизвестное значение mood: CALM"
-                    violations:
-                      -
-                        field: "mood"
-                        message: "Допустимы LONGING, GLOOM, APATHY, FRENZY"
+              example:
+                message: "Неизвестное значение mood: CALM"
+                violations:
+                  - field: "mood"
+                    message: "Допустимы LONGING, GLOOM, APATHY, FRENZY"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /human-beings/search/name-contains:
     get:
@@ -427,40 +391,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
-              examples:
-                result:
-                  summary: Alice содержит lic
-                  value:
-                    -
-                      id: 101
-                      name: "Alice"
-                      coordinates:
-                        x: 120.5
-                        y: 45.5
-                      creationDate: "2026-09-07T21:15:00"
-                      realHero: true
-                      hasToothpick: false
-                      impactSpeed: 120.5
-                      weaponType: "PISTOL"
-                      mood: "FRENZY"
-                      car:
-                        name: "Lada Kalina"
-                        cool: true
+              example:
+                - id: 101
+                  name: "Alice"
+                  coordinates:
+                    x: 120.5
+                    y: 45.5
+                  creationDate: "2026-09-07T21:15:00"
+                  realHero: true
+                  hasToothpick: false
+                  impactSpeed: 120.5
+                  weaponType: "PISTOL"
+                  mood: "FRENZY"
+                  car:
+                    name: "Lada Kalina"
+                    cool: true
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Не задана подстрока поиска"
-                    violations:
-                      -
-                        field: "substring"
-                        message: "Обязательный параметр substring отсутствует"
+              example:
+                message: "Не задана подстрока поиска"
+                violations:
+                  - field: "substring"
+                    message: "Обязательный параметр substring отсутствует"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /human-beings/search/name-prefix:
     get:
@@ -487,55 +445,48 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
-              examples:
-                result:
-                  summary: Alice и Alina начинаются с Al
-                  value:
-                    -
-                      id: 101
-                      name: "Alice"
-                      coordinates:
-                        x: 120.5
-                        y: 45.5
-                      creationDate: "2026-09-07T21:15:00"
-                      realHero: true
-                      hasToothpick: false
-                      impactSpeed: 120.5
-                      weaponType: "PISTOL"
-                      mood: "FRENZY"
-                      car:
-                        name: "Lada Kalina"
-                        cool: true
-                    -
-                      id: 102
-                      name: "Alina"
-                      coordinates:
-                        x: 50
-                        y: 80
-                      creationDate: "2026-09-07T21:15:00"
-                      realHero: true
-                      hasToothpick: false
-                      impactSpeed: 120.5
-                      weaponType: "BAT"
-                      mood: "FRENZY"
-                      car:
-                        name: "Volvo XC60"
-                        cool: true
+              example:
+                - id: 101
+                  name: "Alice"
+                  coordinates:
+                    x: 120.5
+                    y: 45.5
+                  creationDate: "2026-09-07T21:15:00"
+                  realHero: true
+                  hasToothpick: false
+                  impactSpeed: 120.5
+                  weaponType: "PISTOL"
+                  mood: "FRENZY"
+                  car:
+                    name: "Lada Kalina"
+                    cool: true
+                - id: 102
+                  name: "Alina"
+                  coordinates:
+                    x: 50
+                    y: 80
+                  creationDate: "2026-09-07T21:15:00"
+                  realHero: true
+                  hasToothpick: false
+                  impactSpeed: 120.5
+                  weaponType: "BAT"
+                  mood: "FRENZY"
+                  car:
+                    name: "Volvo XC60"
+                    cool: true
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Префикс поиска не может быть пустым"
-                    violations:
-                      -
-                        field: "prefix"
-                        message: "Укажите хотя бы один символ"
+              example:
+                message: "Префикс поиска не может быть пустым"
+                violations:
+                  - field: "prefix"
+                    message: "Укажите хотя бы один символ"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /heroes/team/{team-id}/remove/{hero-id}:
     delete:
@@ -570,20 +521,16 @@ paths:
         '204':
           description: Герой успешно удалён из команды
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Некорректный идентификатор героя"
-                    violations:
-                      -
-                        field: "hero-id"
-                        message: "Ожидается положительное целое число, получено abc"
+              example:
+                message: "Некорректный идентификатор героя"
+                violations:
+                  - field: "hero-id"
+                    message: "Ожидается положительное целое число, получено abc"
         '404':
           description: Команда или участник не найдены
           content:
@@ -637,36 +584,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
-              examples:
-                result:
-                  summary: Нет подходящих героев — изменений нет
-                  value: []
+              example: []
         '400':
-          description: Некорректный запрос
+          description: Неверные или отсутствующие обязательные URL-параметры
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  summary: Пример ошибки для этой операции
-                  value:
-                    message: "Некорректный идентификатор команды"
-                    violations:
-                      -
-                        field: "team-id"
-                        message: "Значение должно быть больше 0, получено 0"
+              example:
+                message: "Некорректный идентификатор команды"
+                violations:
+                  - field: "team-id"
+                    message: "Значение должно быть больше 0, получено 0"
         '404':
-          description: Команда или участник не найдены
+          description: Команда не найдена
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                teamMissing:
-                  summary: Команда отсутствует
-                  value:
-                    message: "Команда с идентификатором 7 не найдена"
+              example:
+                message: "Команда с идентификатором 7 не найдена"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
