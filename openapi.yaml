@@ -18,6 +18,10 @@ info:
        массовой пересадки героев команды без автомобиля на красные `Lada Kalina`.
        Сервис выступает в роли оркестратора над API коллекции.
 
+servers:
+  - url: https://se.ifmo.ru/~s408391/
+    description: Helios
+
 tags:
   - name: Human beings
     description: Базовые операции с коллекцией объектов HumanBeing
