@@ -1,12 +1,10 @@
 openapi: 3.0.3
 
 info:
-
   title: Human Being Collection API & Heroes API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
-
 
     Спецификация описывает базовые операции создания, чтения, полного обновления,
     удаления и получения списка объектов. Список поддерживает фильтрацию по любой
@@ -15,14 +13,12 @@ info:
     Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
     для чтения.
 
+    2) REST API веб-сервиса (Heroes), расположенного на URL /heroes и реализующего
+    дополнительные операции, связанные с вызовом API первого сервиса: удаление
+    героя из команды и массовую пересадку героев команды без автомобиля на
+    красные "Lada Kalina".
 
-    2) REST API веб-сервиса (Heroes) для управления составом команд и проведения групповых операций над героями.
-    
-    Спецификация описывает дополнительные функции, расширяющие возможности управления объектами HumanBeing через взаимодействие с первым сервисом. Реализованы операции формирования команд путём привязки существующих героев, а также инструменты массового изменения состояния — перевод всех участников выбранной команды в максимально депрессивное настроение.
-    
-    Для выполнения операций требуются валидные идентификаторы команд и объектов коллекции. Сервис выступает в роли оркестратора над базовым API коллекции.
-
-
+    Сервис выступает в роли оркестратора над базовым API коллекции.
 
 servers:
   - url: http://localhost:8080/api/v1
@@ -30,16 +26,13 @@ servers:
   - url: http://localhost:8081
     description: Сервис Heroes
 
-
 tags:
   - name: Human beings
     description: Базовые операции с коллекцией объектов HumanBeing
-
   - name: Human beings (Extra)
     description: Дополнительные поисковые операции первого сервиса
   - name: Heroes Service
     description: Операции второго веб-сервиса (/heroes)
-
 
 paths:
   /human-beings:
@@ -55,7 +48,7 @@ paths:
         несколько раз; порядок параметров определяет приоритет полей сортировки.
 
         Пример:
-        `GET /human-beings?page=1&size=20&mood=CALM&car.cool=true&sort=name,asc&sort=id,desc`.
+        `GET /human-beings?page=1&size=20&mood=FRENZY&car.cool=true&sort=name,asc&sort=id,desc`.
       operationId: getHumanBeings
       parameters:
         - $ref: '#/components/parameters/Page'
@@ -71,6 +64,7 @@ paths:
         - $ref: '#/components/parameters/FilterImpactSpeed'
         - $ref: '#/components/parameters/FilterWeaponType'
         - $ref: '#/components/parameters/FilterMood'
+        - $ref: '#/components/parameters/FilterCarName'
         - $ref: '#/components/parameters/FilterCarCool'
       responses:
         '200':
@@ -96,15 +90,16 @@ paths:
                     - id: 42
                       name: Alice
                       coordinates:
-                        x: 15
-                        y: -12.5
-                      creationDate: '2026-09-07'
+                        x: 120.5
+                        y: 45.5
+                      creationDate: '2026-09-07T21:15:00'
                       realHero: true
                       hasToothpick: false
                       impactSpeed: 120.5
-                      weaponType: HAMMER
-                      mood: CALM
+                      weaponType: PISTOL
+                      mood: FRENZY
                       car:
+                        name: Lada Kalina
                         cool: true
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -118,9 +113,9 @@ paths:
         - Human beings
       summary: Добавить новый объект
       description: |
-        Создаёт новый объект `HumanBeing`. 
-        
-        Клиент передаёт все изменяемые поля объекта в формате JSON. Значения `id` 
+        Создаёт новый объект `HumanBeing`.
+
+        Клиент передаёт все изменяемые поля объекта в формате JSON. Значения `id`
         и `creationDate` сервис генерирует автоматически.
       operationId: createHumanBeing
       requestBody:
@@ -242,102 +237,207 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /human-beings/group-by-id:
+  /human-beings/count/mood-less-than:
     get:
       tags:
         - Human beings (Extra)
-      summary: Сгруппировать объекты по id
-      description: Возвращает количесвто элементов для каждого уникального id (так как id уникален, количесвто всегда будет 1).
+      summary: Подсчитать объекты с настроением меньше заданного
+      description: |
+        Возвращает количество объектов коллекции, у которых значение поля `mood`
+        меньше заданного. Сравнение производится по порядку следования значений
+        перечисления: `LONGING < GLOOM < APATHY < FRENZY`.
+      operationId: countHumanBeingsByMoodLessThan
+      parameters:
+        - name: mood
+          in: query
+          required: true
+          description: Пороговое значение настроения (не включается в результат)
+          schema:
+            $ref: '#/components/schemas/Mood'
+          example: APATHY
       responses:
         '200':
-          description: Результат группировки
+          description: Количество подходящих объектов
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - count
                 properties:
-                  id: { type: integer }
-                  count: { type : integer }
+                  count:
+                    type: integer
+                    format: int64
+                    minimum: 0
+                    example: 17
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /human-beings/search/name-contains:
+    get:
+      tags:
+        - Human beings (Extra)
+      summary: Поиск по вхождению подстроки в имени
+      description: Возвращает объекты, значение поля `name` которых содержит заданную подстроку.
+      operationId: searchHumanBeingsByNameContains
+      parameters:
+        - name: substring
+          in: query
+          required: true
+          description: Подстрока для поиска внутри имени
+          schema:
+            type: string
+            minLength: 1
+          example: lic
+      responses:
+        '200':
+          description: Список подходящих объектов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HumanBeing'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /human-beings/search/name-prefix:
     get:
       tags:
         - Human beings (Extra)
       summary: Поиск по префиксу имени
+      description: Возвращает объекты, значение поля `name` которых начинается с заданной подстроки.
+      operationId: searchHumanBeingsByNamePrefix
       parameters:
         - name: prefix
           in: query
           required: true
+          description: Начальная подстрока имени
           schema:
             type: string
+            minLength: 1
+          example: Al
       responses:
         '200':
-          description: Список объектов
+          description: Список подходящих объектов
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
-  /human-beings/search/mood-greater:
-    get:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /heroes/team/{team-id}/remove/{hero-id}:
+    delete:
       tags:
-        - Human beings (Extra)
-      summary: Поиск по настроению больше заданного
-      description: Возвращает героев, чьё настроение "лучше" заданного (APATHY < CALM < FRENZY).
+        - Heroes Service
+      summary: Удалить героя из команды
+      description: |
+        Удаляет объект `HumanBeing` с идентификатором `hero-id` из состава команды
+        `team-id`. Сам объект `HumanBeing` из коллекции первого сервиса не удаляется —
+        удаляется только его принадлежность к команде.
+      operationId: removeHeroFromTeam
       parameters:
-        - name: mood
-          in: query
+        - name: team-id
+          in: path
           required: true
+          description: Идентификатор команды
           schema:
-            $ref: '#/components/schemas/Mood'
+            type: integer
+            format: int64
+            minimum: 1
+        - name: hero-id
+          in: path
+          required: true
+          description: Идентификатор героя (HumanBeing), которого нужно удалить из команды
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: Герой успешно удалён из команды
+        '404':
+          description: Команда или герой не найдены, либо герой не состоит в этой команде
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /heroes/team/{team-id}/car/add:
+    post:
+      tags:
+        - Heroes Service
+      summary: Пересадить героев команды без машины на красные Lada Kalina
+      description: |
+        Для всех героев команды `team-id`, у которых не задан автомобиль,
+        устанавливает автомобиль `{ name: "Lada Kalina", cool: true }`
+        (по умолчанию считается, что новая машина — крутая, красный цвет
+        подразумевается моделью и в схеме `Car` отдельным полем не хранится).
+        Герои, у которых автомобиль уже есть, не изменяются.
+      operationId: addCarToTeamHeroesWithoutCar
+      parameters:
+        - name: team-id
+          in: path
+          required: true
+          description: Идентификатор команды
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
       responses:
         '200':
-          description: Список объектов
+          description: Операция выполнена, возвращён список изменённых объектов
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
+        '404':
+          description: Команда не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /heroes/team/{team-id}/add/{hero-id}:
     post:
       tags:
         - Heroes Service
       summary: Добавить героя в команду
+      description: |
+        Дополнительная операция (сверх обязательных требований задания):
+        добавляет существующий объект `HumanBeing` в состав команды `team-id`.
+        Нужна для формирования команд, над которыми затем выполняются
+        обязательные операции удаления героя и массовой пересадки на машины.
+      operationId: addHeroToTeam
       parameters:
         - name: team-id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
         - name: hero-id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
       responses:
         '200':
-          description: Герой успешно добавлен
+          description: Герой успешно добавлен в команду
         '404':
           description: Герой или команда не найдены
-
-  /heroes/team/{team-id}/make-depressive:
-    post:
-      tags:
-        - Heroes Service
-      summary: Сделать всех героев команды депрессивными
-      description: Устанавливает настроение APATHY всем героям  указанной команде.
-      parameters:
-        - name: team-id
-          in: path
-          required: true
-          schema: { type: integer }
-      responses:
-        '200':
-          description: Операция выполнена
-        '404': 
-         description: Команда не найдена
-
-
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   parameters:
@@ -384,7 +484,7 @@ components:
         `asc` и `desc`. Для многополевой сортировки параметр передаётся несколько раз.
         Допустимые поля: `id`, `name`, `coordinates.x`, `coordinates.y`,
         `creationDate`, `realHero`, `hasToothpick`, `impactSpeed`, `weaponType`,
-        `mood`, `car.cool`.
+        `mood`, `car.name`, `car.cool`.
       style: form
       explode: true
       schema:
@@ -393,7 +493,7 @@ components:
           - id,asc
         items:
           type: string
-          pattern: '^(id|name|coordinates\.x|coordinates\.y|creationDate|realHero|hasToothpick|impactSpeed|weaponType|mood|car\.cool),(asc|desc)$'
+          pattern: '^(id|name|coordinates\.x|coordinates\.y|creationDate|realHero|hasToothpick|impactSpeed|weaponType|mood|car\.name|car\.cool),(asc|desc)$'
       example:
         - name,asc
         - id,desc
@@ -425,9 +525,10 @@ components:
       required: false
       description: Отобрать объекты по координате x
       schema:
-        type: integer
-        format: int32
-      example: 15
+        type: number
+        format: double
+        maximum: 740
+      example: 120.5
 
     FilterCoordinatesY:
       name: coordinates.y
@@ -437,19 +538,18 @@ components:
       schema:
         type: number
         format: float
-        minimum: -171
-        exclusiveMinimum: true
-      example: -12.5
+        maximum: 913
+      example: 45.5
 
     FilterCreationDate:
       name: creationDate
       in: query
       required: false
-      description: Отобрать объекты по дате создания
+      description: Отобрать объекты по дате и времени создания
       schema:
         type: string
-        format: date
-      example: '2026-09-07'
+        format: date-time
+      example: '2026-09-07T21:15:00'
 
     FilterRealHero:
       name: realHero
@@ -477,7 +577,8 @@ components:
       schema:
         type: number
         format: float
-        maximum: 465
+        minimum: -193
+        exclusiveMinimum: true
       example: 120.5
 
     FilterWeaponType:
@@ -487,7 +588,7 @@ components:
       description: Отобрать объекты по типу оружия
       schema:
         $ref: '#/components/schemas/WeaponType'
-      example: HAMMER
+      example: PISTOL
 
     FilterMood:
       name: mood
@@ -496,7 +597,17 @@ components:
       description: Отобрать объекты по настроению
       schema:
         $ref: '#/components/schemas/Mood'
-      example: CALM
+      example: FRENZY
+
+    FilterCarName:
+      name: car.name
+      in: query
+      required: false
+      description: Отобрать объекты по названию автомобиля
+      schema:
+        type: string
+        minLength: 1
+      example: Lada Kalina
 
     FilterCarCool:
       name: car.cool
@@ -512,7 +623,8 @@ components:
       type: object
       description: |
         Изменяемые данные объекта HumanBeing. Поля `id` и `creationDate` отсутствуют,
-        поскольку генерируются сервисом автоматически.
+        поскольку генерируются сервисом автоматически. Поле `weaponType` обязано
+        присутствовать в теле запроса, но может иметь значение `null`.
       required:
         - name
         - coordinates
@@ -536,13 +648,14 @@ components:
           example: true
         hasToothpick:
           type: boolean
-          description: Есть ли у объекта зубочистка
+          description: Есть ли у объекта зубочистка (не может быть null)
           example: false
         impactSpeed:
           type: number
           format: float
-          maximum: 465
-          description: Скорость удара, не превышающая 465
+          minimum: -193
+          exclusiveMinimum: true
+          description: Скорость удара, строго превышающая -193
           example: 120.5
         weaponType:
           $ref: '#/components/schemas/WeaponType'
@@ -582,23 +695,24 @@ components:
           $ref: '#/components/schemas/Coordinates'
         creationDate:
           type: string
-          format: date
+          format: date-time
           readOnly: true
-          description: Дата создания, автоматически устанавливаемая сервисом
-          example: '2026-09-07'
+          description: Дата и время создания, автоматически устанавливаемые сервисом
+          example: '2026-09-07T21:15:00'
         realHero:
           type: boolean
           description: Является ли объект настоящим героем
           example: true
         hasToothpick:
           type: boolean
-          description: Есть ли у объекта зубочистка
+          description: Есть ли у объекта зубочистка (не может быть null)
           example: false
         impactSpeed:
           type: number
           format: float
-          maximum: 465
-          description: Скорость удара, не превышающая 465
+          minimum: -193
+          exclusiveMinimum: true
+          description: Скорость удара, строго превышающая -193
           example: 120.5
         weaponType:
           $ref: '#/components/schemas/WeaponType'
@@ -615,24 +729,30 @@ components:
         - y
       properties:
         x:
-          type: integer
-          format: int32
-          description: Координата x
-          example: 15
+          type: number
+          format: double
+          maximum: 740
+          description: Координата x, не превышающая 740
+          example: 120.5
         y:
           type: number
           format: float
-          minimum: -171
-          exclusiveMinimum: true
-          description: Координата y, строго превышающая -171
-          example: -12.5
+          maximum: 913
+          description: Координата y (не может быть null), не превышающая 913
+          example: 45.5
 
     Car:
       type: object
       description: Автомобиль героя
       required:
+        - name
         - cool
       properties:
+        name:
+          type: string
+          minLength: 1
+          description: Название автомобиля (не может быть null)
+          example: Lada Kalina
         cool:
           type: boolean
           description: Является ли автомобиль крутым
@@ -640,21 +760,26 @@ components:
 
     WeaponType:
       type: string
-      description: Тип оружия героя
+      description: Тип оружия героя. Поле может быть null.
+      nullable: true
       enum:
-        - HAMMER
+        - AXE
+        - PISTOL
         - KNIFE
         - BAT
-      example: HAMMER
+      example: PISTOL
 
     Mood:
       type: string
-      description: Настроение героя
+      description: |
+        Настроение героя. Значения упорядочены от самого "спокойного" к самому
+        "яростному": LONGING < GLOOM < APATHY < FRENZY.
       enum:
+        - LONGING
+        - GLOOM
         - APATHY
-        - CALM
         - FRENZY
-      example: CALM
+      example: FRENZY
 
     ErrorResponse:
       type: object
@@ -686,7 +811,7 @@ components:
         message:
           type: string
           description: Причина отклонения значения
-          example: Значение должно быть меньше или равно 465
+          example: Значение должно быть больше -193
 
   responses:
     BadRequest:
@@ -729,9 +854,9 @@ components:
             message: Переданные данные нарушают ограничения целостности
             violations:
               - field: coordinates.y
-                message: Значение должно быть больше -171
+                message: Значение должно быть не больше 913
               - field: impactSpeed
-                message: Значение должно быть меньше или равно 465
+                message: Значение должно быть больше -193
 
     InternalServerError:
       description: Непредвиденная внутренняя ошибка сервиса
@@ -748,14 +873,15 @@ components:
       value:
         name: Alice
         coordinates:
-          x: 15
-          y: -12.5
+          x: 120.5
+          y: 45.5
         realHero: true
         hasToothpick: false
         impactSpeed: 120.5
-        weaponType: HAMMER
-        mood: CALM
+        weaponType: PISTOL
+        mood: FRENZY
         car:
+          name: Lada Kalina
           cool: true
 
     HumanBeingExample:
@@ -764,13 +890,14 @@ components:
         id: 42
         name: Alice
         coordinates:
-          x: 15
-          y: -12.5
-        creationDate: '2026-09-07'
+          x: 120.5
+          y: 45.5
+        creationDate: '2026-09-07T21:15:00'
         realHero: true
         hasToothpick: false
         impactSpeed: 120.5
-        weaponType: HAMMER
-        mood: CALM
+        weaponType: PISTOL
+        mood: FRENZY
         car:
+          name: Lada Kalina
           cool: true
