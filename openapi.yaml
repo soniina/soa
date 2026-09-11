@@ -1,10 +1,20 @@
 openapi: 3.0.3
 
+# При недоступности сети HTTP-код и JSON-ответ от сервиса отсутствуют.
+# Примеры должны соответствовать операциям и использовать согласованные ID.
+
+
 info:
   title: Human Being Collection API & Heroes API
-  version: 1.2.1
+  version: 1.2.2
   description: |
     Спецификация описывает два REST API.
+
+    Примеры демонстрируют контракт и не являются данными работающего сервера.
+    Для Try it out необходимо запустить соответствующий сервис и выбрать его
+    адрес в servers. localhost означает компьютер, на котором открыт браузер.
+    При сетевой ошибке HTTP-ответ может отсутствовать, а при блокировке CORS —
+    быть недоступным браузеру. Такой сбой не является JSON-ошибкой ErrorResponse.
 
     1. Сервис управления коллекцией объектов `HumanBeing`: базовые операции
        создания, чтения, полного обновления, удаления и получения списка, а также
@@ -74,7 +84,7 @@ paths:
                 type: integer
                 format: int64
                 minimum: 0
-              example: 47
+              example: 2
           content:
             application/json:
               schema:
@@ -82,27 +92,57 @@ paths:
                 items:
                   $ref: '#/components/schemas/HumanBeing'
               examples:
-                page:
-                  summary: Пример страницы результата
+                result:
+                  summary: Два героя с mood=FRENZY и car.cool=true
                   value:
-                    - id: 42
-                      name: Alice
+                    -
+                      id: 101
+                      name: "Alice"
                       coordinates:
                         x: 120.5
                         y: 45.5
-                      creationDate: '2026-09-07T21:15:00'
+                      creationDate: "2026-09-07T21:15:00"
                       realHero: true
                       hasToothpick: false
                       impactSpeed: 120.5
-                      weaponType: PISTOL
-                      mood: FRENZY
+                      weaponType: "PISTOL"
+                      mood: "FRENZY"
                       car:
-                        name: Lada Kalina
+                        name: "Lada Kalina"
+                        cool: true
+                    -
+                      id: 102
+                      name: "Alina"
+                      coordinates:
+                        x: 50
+                        y: 80
+                      creationDate: "2026-09-07T21:15:00"
+                      realHero: true
+                      hasToothpick: false
+                      impactSpeed: 120.5
+                      weaponType: "BAT"
+                      mood: "FRENZY"
+                      car:
+                        name: "Volvo XC60"
                         cool: true
         '400':
-          $ref: '#/components/responses/BadRequest'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Некорректные параметры выборки"
+                    violations:
+                      -
+                        field: "page"
+                        message: "Номер страницы должен быть не меньше 1"
+                      -
+                        field: "sort"
+                        message: "Неизвестное поле сортировки height"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -125,7 +165,7 @@ paths:
               $ref: '#/components/schemas/HumanBeingRequest'
             examples:
               default:
-                $ref: '#/components/examples/HumanBeingRequestExample'
+                $ref: '#/components/examples/CreateHumanBeingRequestExample'
       responses:
         '201':
           description: Объект успешно создан
@@ -136,20 +176,45 @@ paths:
               schema:
                 type: string
                 format: uri-reference
-              example: /api/v1/human-beings/42
+              example: /api/v1/human-beings/103
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HumanBeing'
               examples:
                 created:
-                  $ref: '#/components/examples/HumanBeingExample'
+                  $ref: '#/components/examples/CreatedHumanBeingExample'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Тело запроса содержит некорректный JSON"
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
         '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+          description: JSON корректен, но поля нарушают ограничения модели
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFields:
+                  summary: Пустые имена при создании
+                  value:
+                    message: "Объект не прошёл проверку полей"
+                    violations:
+                      -
+                        field: "name"
+                        message: "Имя не может быть пустым"
+                      -
+                        field: "car.name"
+                        message: "Название автомобиля не может быть пустым"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -174,7 +239,20 @@ paths:
                 found:
                   $ref: '#/components/examples/HumanBeingExample'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Некорректный идентификатор объекта"
+                    violations:
+                      -
+                        field: "id"
+                        message: "Ожидается положительное целое число, получено abc"
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -197,7 +275,7 @@ paths:
               $ref: '#/components/schemas/HumanBeingRequest'
             examples:
               default:
-                $ref: '#/components/examples/HumanBeingRequestExample'
+                $ref: '#/components/examples/UpdateHumanBeingRequestExample'
       responses:
         '200':
           description: Объект успешно обновлён
@@ -207,15 +285,40 @@ paths:
                 $ref: '#/components/schemas/HumanBeing'
               examples:
                 updated:
-                  $ref: '#/components/examples/HumanBeingExample'
+                  $ref: '#/components/examples/UpdatedHumanBeingExample'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Тело запроса содержит некорректный JSON"
         '404':
           $ref: '#/components/responses/NotFound'
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
         '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+          description: JSON корректен, но поля нарушают ограничения модели
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFields:
+                  summary: Недопустимые числовые значения при обновлении
+                  value:
+                    message: "Объект не прошёл проверку полей"
+                    violations:
+                      -
+                        field: "coordinates.y"
+                        message: "Значение 914 превышает максимум 913"
+                      -
+                        field: "impactSpeed"
+                        message: "Значение -193 должно быть строго больше -193"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -229,7 +332,20 @@ paths:
         '204':
           description: Объект успешно удалён; тело ответа отсутствует
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Некорректный идентификатор удаляемого объекта"
+                    violations:
+                      -
+                        field: "id"
+                        message: "Значение должно быть больше 0, получено 0"
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -267,9 +383,24 @@ paths:
                     type: integer
                     format: int64
                     minimum: 0
-                    example: 17
+                    example: 3
+              example:
+                count: 3
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Неизвестное значение mood: CALM"
+                    violations:
+                      -
+                        field: "mood"
+                        message: "Допустимы LONGING, GLOOM, APATHY, FRENZY"
 
   /human-beings/search/name-contains:
     get:
@@ -296,8 +427,40 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
+              examples:
+                result:
+                  summary: Alice содержит lic
+                  value:
+                    -
+                      id: 101
+                      name: "Alice"
+                      coordinates:
+                        x: 120.5
+                        y: 45.5
+                      creationDate: "2026-09-07T21:15:00"
+                      realHero: true
+                      hasToothpick: false
+                      impactSpeed: 120.5
+                      weaponType: "PISTOL"
+                      mood: "FRENZY"
+                      car:
+                        name: "Lada Kalina"
+                        cool: true
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Не задана подстрока поиска"
+                    violations:
+                      -
+                        field: "substring"
+                        message: "Обязательный параметр substring отсутствует"
 
   /human-beings/search/name-prefix:
     get:
@@ -324,8 +487,55 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
+              examples:
+                result:
+                  summary: Alice и Alina начинаются с Al
+                  value:
+                    -
+                      id: 101
+                      name: "Alice"
+                      coordinates:
+                        x: 120.5
+                        y: 45.5
+                      creationDate: "2026-09-07T21:15:00"
+                      realHero: true
+                      hasToothpick: false
+                      impactSpeed: 120.5
+                      weaponType: "PISTOL"
+                      mood: "FRENZY"
+                      car:
+                        name: "Lada Kalina"
+                        cool: true
+                    -
+                      id: 102
+                      name: "Alina"
+                      coordinates:
+                        x: 50
+                        y: 80
+                      creationDate: "2026-09-07T21:15:00"
+                      realHero: true
+                      hasToothpick: false
+                      impactSpeed: 120.5
+                      weaponType: "BAT"
+                      mood: "FRENZY"
+                      car:
+                        name: "Volvo XC60"
+                        cool: true
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Префикс поиска не может быть пустым"
+                    violations:
+                      -
+                        field: "prefix"
+                        message: "Укажите хотя бы один символ"
 
   /heroes/team/{team-id}/remove/{hero-id}:
     delete:
@@ -342,6 +552,7 @@ paths:
           in: path
           required: true
           description: Идентификатор команды
+          example: 7
           schema:
             type: integer
             format: int64
@@ -350,6 +561,7 @@ paths:
           in: path
           required: true
           description: Идентификатор героя (HumanBeing), которого нужно удалить из команды
+          example: 102
           schema:
             type: integer
             format: int64
@@ -358,13 +570,39 @@ paths:
         '204':
           description: Герой успешно удалён из команды
         '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          description: Команда или герой не найдены, либо герой не состоит в этой команде
+          description: Некорректный запрос
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Некорректный идентификатор героя"
+                    violations:
+                      -
+                        field: "hero-id"
+                        message: "Ожидается положительное целое число, получено abc"
+        '404':
+          description: Команда или участник не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                teamMissing:
+                  summary: Команда отсутствует
+                  value:
+                    message: "Команда с идентификатором 7 не найдена"
+                heroMissing:
+                  summary: Герой отсутствует
+                  value:
+                    message: "HumanBeing с идентификатором 102 не найден"
+                notInTeam:
+                  summary: Герой существует, но не состоит в команде
+                  value:
+                    message: "Герой 102 не состоит в команде 7"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -385,6 +623,7 @@ paths:
           in: path
           required: true
           description: Идентификатор команды
+          example: 7
           schema:
             type: integer
             format: int64
@@ -398,14 +637,36 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
+              examples:
+                result:
+                  summary: Нет подходящих героев — изменений нет
+                  value: []
         '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          description: Команда не найдена
+          description: Некорректный запрос
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  summary: Пример ошибки для этой операции
+                  value:
+                    message: "Некорректный идентификатор команды"
+                    violations:
+                      -
+                        field: "team-id"
+                        message: "Значение должно быть больше 0, получено 0"
+        '404':
+          description: Команда или участник не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                teamMissing:
+                  summary: Команда отсутствует
+                  value:
+                    message: "Команда с идентификатором 7 не найдена"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -420,7 +681,7 @@ components:
         type: integer
         format: int64
         minimum: 1
-      example: 42
+      example: 101
 
     Page:
       name: page
@@ -477,7 +738,7 @@ components:
         type: integer
         format: int64
         minimum: 1
-      example: 42
+      example: 101
 
     FilterName:
       name: name
@@ -654,7 +915,7 @@ components:
           minimum: 1
           readOnly: true
           description: Уникальный идентификатор, автоматически генерируемый сервисом
-          example: 42
+          example: 101
         name:
           type: string
           minLength: 1
@@ -787,18 +1048,6 @@ components:
           example: Значение должно быть больше -193
 
   responses:
-    BadRequest:
-      description: Запрос имеет неверный синтаксис или содержит некорректные URL-параметры
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            message: Параметр page должен быть целым числом не меньше 1
-            violations:
-              - field: page
-                message: Значение должно быть не меньше 1
-
     NotFound:
       description: Объект с указанным идентификатором не найден
       content:
@@ -806,7 +1055,7 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            message: HumanBeing с идентификатором 42 не найден
+            message: HumanBeing с идентификатором 101 не найден
 
     UnsupportedMediaType:
       description: Формат тела запроса отличен от application/json
@@ -816,20 +1065,6 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             message: Поддерживается только Content-Type application/json
-
-    UnprocessableEntity:
-      description: JSON корректен, но данные нарушают ограничения целостности модели
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            message: Переданные данные нарушают ограничения целостности
-            violations:
-              - field: coordinates.y
-                message: Значение должно быть не больше 913
-              - field: impactSpeed
-                message: Значение должно быть больше -193
 
     InternalServerError:
       description: Непредвиденная внутренняя ошибка сервиса
@@ -841,36 +1076,88 @@ components:
             message: Произошла внутренняя ошибка сервиса
 
   examples:
-    HumanBeingRequestExample:
-      summary: Данные для создания или полного обновления объекта
+    HumanBeingExample:
+      summary: Герой 101 до обновления
       value:
-        name: Alice
+        id: 101
+        name: "Alice"
         coordinates:
           x: 120.5
           y: 45.5
+        creationDate: "2026-09-07T21:15:00"
         realHero: true
         hasToothpick: false
         impactSpeed: 120.5
-        weaponType: PISTOL
-        mood: FRENZY
+        weaponType: "PISTOL"
+        mood: "FRENZY"
         car:
-          name: Lada Kalina
+          name: "Lada Kalina"
           cool: true
 
-    HumanBeingExample:
-      summary: Полное представление объекта
+    CreateHumanBeingRequestExample:
+      summary: Создание Boris без оружия
       value:
-        id: 42
-        name: Alice
+        name: "Boris"
         coordinates:
           x: 120.5
           y: 45.5
-        creationDate: '2026-09-07T21:15:00'
         realHero: true
         hasToothpick: false
         impactSpeed: 120.5
-        weaponType: PISTOL
-        mood: FRENZY
+        weaponType: null
+        mood: "APATHY"
         car:
-          name: Lada Kalina
+          name: "Renault Logan"
+          cool: false
+
+    CreatedHumanBeingExample:
+      summary: Создан Boris, id совпадает с Location
+      value:
+        id: 103
+        name: "Boris"
+        coordinates:
+          x: 120.5
+          y: 45.5
+        creationDate: "2026-09-07T21:15:00"
+        realHero: true
+        hasToothpick: false
+        impactSpeed: 120.5
+        weaponType: null
+        mood: "APATHY"
+        car:
+          name: "Renault Logan"
+          cool: false
+
+    UpdateHumanBeingRequestExample:
+      summary: 'Обновление героя 101: настроение, скорость и зубочистка'
+      value:
+        name: "Alice"
+        coordinates:
+          x: 120.5
+          y: 45.5
+        realHero: true
+        hasToothpick: true
+        impactSpeed: 180
+        weaponType: "PISTOL"
+        mood: "APATHY"
+        car:
+          name: "Lada Kalina"
+          cool: true
+
+    UpdatedHumanBeingExample:
+      summary: Герой 101 после обновления, id и creationDate сохранены
+      value:
+        id: 101
+        name: "Alice"
+        coordinates:
+          x: 120.5
+          y: 45.5
+        creationDate: "2026-09-07T21:15:00"
+        realHero: true
+        hasToothpick: true
+        impactSpeed: 180
+        weaponType: "PISTOL"
+        mood: "APATHY"
+        car:
+          name: "Lada Kalina"
           cool: true
