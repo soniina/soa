@@ -2,29 +2,25 @@ openapi: 3.0.3
 
 info:
   title: Human Being Collection API & Heroes API
-  version: 1.1.0
+  version: 1.2.0
   description: |
-    REST API веб-сервиса для управления коллекцией объектов `HumanBeing`.
+    Спецификация описывает два REST API.
 
-    Спецификация описывает базовые операции создания, чтения, полного обновления,
-    удаления и получения списка объектов. Список поддерживает фильтрацию по любой
-    комбинации полей, многополевую сортировку и постраничный вывод.
+    1. Сервис управления коллекцией объектов `HumanBeing`: базовые операции
+       создания, чтения, полного обновления, удаления и получения списка, а также
+       дополнительные операции поиска и подсчёта. Список поддерживает фильтрацию
+       по любой комбинации полей, многополевую сортировку и постраничный вывод.
 
-    Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
-    для чтения.
+       Поля `id` и `creationDate` генерируются сервисом и доступны клиенту только
+       для чтения.
 
-    2) REST API веб-сервиса (Heroes), расположенного на URL /heroes и реализующего
-    дополнительные операции, связанные с вызовом API первого сервиса: удаление
-    героя из команды и массовую пересадку героев команды без автомобиля на
-    красные "Lada Kalina".
-
-    Сервис выступает в роли оркестратора над базовым API коллекции.
+    2. Сервис Heroes на URL `/heroes`: операции удаления героя из команды и
+       массовой пересадки героев команды без автомобиля на красные `Lada Kalina`.
+       Сервис выступает в роли оркестратора над API коллекции.
 
 servers:
   - url: http://localhost:8080/api/v1
-    description: Локальный сервер разработки (1 сервис, коллекция)
-  - url: http://localhost:8081
-    description: Сервис Heroes
+    description: Локальный сервер управления коллекцией HumanBeing
 
 tags:
   - name: Human beings
@@ -330,6 +326,9 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /heroes/team/{team-id}/remove/{hero-id}:
+    servers:
+      - url: http://localhost:8081
+        description: Локальный сервер Heroes
     delete:
       tags:
         - Heroes Service
@@ -359,24 +358,31 @@ paths:
       responses:
         '204':
           description: Герой успешно удалён из команды
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           description: Команда или герой не найдены, либо герой не состоит в этой команде
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /heroes/team/{team-id}/car/add:
+    servers:
+      - url: http://localhost:8081
+        description: Локальный сервер Heroes
     post:
       tags:
         - Heroes Service
       summary: Пересадить героев команды без машины на красные Lada Kalina
       description: |
-        Для всех героев команды `team-id`, у которых не задан автомобиль,
-        устанавливает автомобиль `{ name: "Lada Kalina", cool: true }`
-        (по умолчанию считается, что новая машина — крутая, красный цвет
-        подразумевается моделью и в схеме `Car` отдельным полем не хранится).
-        Герои, у которых автомобиль уже есть, не изменяются.
+        Для целей этого API герой считается не имеющим автомобиля, если `car.name`
+        является пустой строкой. Для каждого такого героя операция устанавливает
+        `car.name` в значение `Красная Lada Kalina`. Значение `car.cool` не изменяется,
+        поскольку требуемое значение этого поля в задании не определено. Герои с
+        непустым `car.name` не изменяются.
       operationId: addCarToTeamHeroesWithoutCar
       parameters:
         - name: team-id
@@ -396,48 +402,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/HumanBeing'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           description: Команда не найдена
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /heroes/team/{team-id}/add/{hero-id}:
-    post:
-      tags:
-        - Heroes Service
-      summary: Добавить героя в команду
-      description: |
-        Дополнительная операция (сверх обязательных требований задания):
-        добавляет существующий объект `HumanBeing` в состав команды `team-id`.
-        Нужна для формирования команд, над которыми затем выполняются
-        обязательные операции удаления героя и массовой пересадки на машины.
-      operationId: addHeroToTeam
-      parameters:
-        - name: team-id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-            minimum: 1
-        - name: hero-id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-            minimum: 1
-      responses:
-        '200':
-          description: Герой успешно добавлен в команду
-        '404':
-          description: Герой или команда не найдены
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   parameters:
@@ -548,7 +522,7 @@ components:
       description: Отобрать объекты по дате и времени создания
       schema:
         type: string
-        format: date-time
+        pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?$'
       example: '2026-09-07T21:15:00'
 
     FilterRealHero:
@@ -603,10 +577,10 @@ components:
       name: car.name
       in: query
       required: false
+      allowEmptyValue: true
       description: Отобрать объекты по названию автомобиля
       schema:
         type: string
-        minLength: 1
       example: Lada Kalina
 
     FilterCarCool:
@@ -623,15 +597,14 @@ components:
       type: object
       description: |
         Изменяемые данные объекта HumanBeing. Поля `id` и `creationDate` отсутствуют,
-        поскольку генерируются сервисом автоматически. Поле `weaponType` обязано
-        присутствовать в теле запроса, но может иметь значение `null`.
+        поскольку генерируются сервисом автоматически. Поле `weaponType` можно
+        не передавать или передать со значением `null`.
       required:
         - name
         - coordinates
         - realHero
         - hasToothpick
         - impactSpeed
-        - weaponType
         - mood
         - car
       properties:
@@ -695,9 +668,11 @@ components:
           $ref: '#/components/schemas/Coordinates'
         creationDate:
           type: string
-          format: date-time
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?$'
           readOnly: true
-          description: Дата и время создания, автоматически устанавливаемые сервисом
+          description: |
+            Дата и время создания в формате ISO Local Date Time без часового пояса,
+            автоматически устанавливаемые сервисом
           example: '2026-09-07T21:15:00'
         realHero:
           type: boolean
@@ -750,8 +725,9 @@ components:
       properties:
         name:
           type: string
-          minLength: 1
-          description: Название автомобиля (не может быть null)
+          description: |
+            Название автомобиля (не может быть null). Пустая строка означает,
+            что у героя нет автомобиля
           example: Lada Kalina
         cool:
           type: boolean
@@ -767,6 +743,7 @@ components:
         - PISTOL
         - KNIFE
         - BAT
+        - null
       example: PISTOL
 
     Mood:
