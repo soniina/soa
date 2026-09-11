@@ -21,6 +21,8 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
     description: Локальный сервер управления коллекцией HumanBeing
+  - url: http://localhost:8081
+    description: Локальный сервер Heroes
 
 tags:
   - name: Human beings
@@ -326,9 +328,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
   /heroes/team/{team-id}/remove/{hero-id}:
-    servers:
-      - url: http://localhost:8081
-        description: Локальный сервер Heroes
     delete:
       tags:
         - Heroes Service
@@ -370,9 +369,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /heroes/team/{team-id}/car/add:
-    servers:
-      - url: http://localhost:8081
-        description: Локальный сервер Heroes
     post:
       tags:
         - Heroes Service
