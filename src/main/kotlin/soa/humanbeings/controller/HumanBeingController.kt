@@ -6,12 +6,15 @@ import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import java.net.URI
 import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.bind.annotation.*
 import soa.humanbeings.dto.HumanBeingRequest
 import soa.humanbeings.dto.HumanBeingSearchRequest
 import soa.humanbeings.dto.HumanBeingSort
-import soa.humanbeings.model.HumanBeing
+import soa.humanbeings.dto.HumanBeingResponse
+import soa.humanbeings.dto.toResponse
 import soa.humanbeings.model.Mood
 import soa.humanbeings.service.HumanBeingService
 
@@ -24,38 +27,39 @@ class HumanBeingController(
     fun list(
         @Valid @ModelAttribute request: HumanBeingSearchRequest,
         @RequestParam(required = false) @Size(min = 1) sort: List<HumanBeingSort>?,
-    ): ResponseEntity<List<HumanBeing>> {
+    ): ResponseEntity<List<HumanBeingResponse>> {
         val orders = sort?.map { Sort.Order(it.direction, it.field.property) }
             ?: listOf(Sort.Order.asc("id"))
         val page = service.search(request, Sort.by(orders))
         return ResponseEntity.ok()
             .header("X-Total-Count", page.totalElements.toString())
-            .body(page.content)
+            .body(page.content.map { it.toResponse() })
     }
 
     @GetMapping("/{id}")
-    fun get(@PathVariable @Positive id: Long): HumanBeing = service.get(id)
+    fun get(@PathVariable @Positive id: Long): HumanBeingResponse =
+        service.get(id)?.toResponse() ?: notFound(id)
 
     @PostMapping(consumes = ["application/json"])
     fun create(
         @Valid @RequestBody body: HumanBeingRequest,
         request: HttpServletRequest
-    ): ResponseEntity<HumanBeing> {
+    ): ResponseEntity<HumanBeingResponse> {
         val human = service.create(body)
         return ResponseEntity.created(URI.create("${request.contextPath}/human-beings/${human.id}"))
-            .body(human)
+            .body(human.toResponse())
     }
 
     @PutMapping("/{id}", consumes = ["application/json"])
     fun update(
         @PathVariable @Positive id: Long,
         @Valid @RequestBody body: HumanBeingRequest
-    ): HumanBeing =
-        service.update(id, body)
+    ): HumanBeingResponse =
+        service.update(id, body)?.toResponse() ?: notFound(id)
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable @Positive id: Long): ResponseEntity<Void> {
-        service.delete(id)
+        if (!service.delete(id)) notFound(id)
         return ResponseEntity.noContent().build()
     }
 
@@ -64,10 +68,13 @@ class HumanBeingController(
         mapOf("count" to service.countMoodLessThan(mood))
 
     @GetMapping("/search/name-contains")
-    fun contains(@RequestParam @Size(min = 1) substring: String): List<HumanBeing> =
-        service.findByNameContains(substring)
+    fun contains(@RequestParam @Size(min = 1) substring: String): List<HumanBeingResponse> =
+        service.findByNameContains(substring).map { it.toResponse() }
 
     @GetMapping("/search/name-prefix")
-    fun prefix(@RequestParam @Size(min = 1) prefix: String): List<HumanBeing> =
-        service.findByNamePrefix(prefix)
+    fun prefix(@RequestParam @Size(min = 1) prefix: String): List<HumanBeingResponse> =
+        service.findByNamePrefix(prefix).map { it.toResponse() }
+
+    private fun notFound(id: Long): Nothing =
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "HumanBeing с идентификатором $id не найден")
 }

@@ -9,8 +9,6 @@ import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import soa.humanbeings.dto.HumanBeingRequest
 import soa.humanbeings.dto.HumanBeingSearchRequest
-import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 import soa.humanbeings.model.HumanBeing
 import soa.humanbeings.model.Mood
 import soa.humanbeings.repository.HumanBeingRepository
@@ -20,16 +18,19 @@ import soa.humanbeings.repository.HumanBeingSpecifications
 @Transactional
 class HumanBeingService(private val repository: HumanBeingRepository) {
     @Transactional(readOnly = true)
-    fun get(id: Long): HumanBeing = repository.findById(id).orElseThrow {
-        ResponseStatusException(HttpStatus.NOT_FOUND, "HumanBeing с идентификатором $id не найден")
-    }
+    fun get(id: Long): HumanBeing? = repository.findById(id).orElse(null)
 
     fun create(request: HumanBeingRequest): HumanBeing =
         repository.save(applyRequest(HumanBeing(), request))
 
-    fun update(id: Long, request: HumanBeingRequest): HumanBeing = applyRequest(get(id), request)
+    fun update(id: Long, request: HumanBeingRequest): HumanBeing? =
+        get(id)?.let { applyRequest(it, request) }
 
-    fun delete(id: Long) = repository.delete(get(id))
+    fun delete(id: Long): Boolean {
+        val human = get(id) ?: return false
+        repository.delete(human)
+        return true
+    }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     fun search(request: HumanBeingSearchRequest, sort: Sort): Page<HumanBeing> {

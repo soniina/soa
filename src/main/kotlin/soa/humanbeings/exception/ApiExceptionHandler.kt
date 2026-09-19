@@ -10,6 +10,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.NoHandlerFoundException
 import soa.humanbeings.dto.ErrorResponse
 import soa.humanbeings.dto.FieldViolation
@@ -17,6 +18,11 @@ import soa.humanbeings.dto.FieldViolation
 @RestControllerAdvice
 class ApiExceptionHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    @ExceptionHandler(ResponseStatusException::class)
+    fun responseStatus(exception: ResponseStatusException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(exception.statusCode)
+            .body(ErrorResponse(exception.reason ?: "Ошибка запроса"))
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun unreadable(exception: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
