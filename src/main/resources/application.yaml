@@ -1,0 +1,28 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEY_STORE:file:./certs/localhost.p12}
+    key-store-type: PKCS12
+    key-store-password: ${SSL_KEY_STORE_PASSWORD:changeit}
+    key-alias: localhost
+spring:
+  application:
+    name: human-being-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/soa}
+    username: ${DB_USERNAME:soa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  jackson:
+    mapper:
+      allow-coercion-of-scalars: false
+    deserialization:
+      fail-on-numbers-for-enums: true
+      fail-on-trailing-tokens: true
+  web:
+    resources:
+      add-mappings: false
