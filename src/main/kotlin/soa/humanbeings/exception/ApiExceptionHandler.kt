@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.NoHandlerFoundException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import soa.humanbeings.dto.ErrorResponse
 import soa.humanbeings.dto.FieldViolation
 
@@ -79,7 +80,7 @@ class ApiExceptionHandler {
         ResponseEntity.status(415)
             .body(ErrorResponse("Поддерживается только Content-Type application/json"))
 
-    @ExceptionHandler(NoHandlerFoundException::class)
+    @ExceptionHandler(NoHandlerFoundException::class, NoResourceFoundException::class)
     fun notFound(): ResponseEntity<String> =
         ResponseEntity.status(404)
             .contentType(MediaType.TEXT_HTML)
