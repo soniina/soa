@@ -5,7 +5,6 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import soa.humanbeings.dto.HumanBeingRequest
 import soa.humanbeings.dto.HumanBeingSearchRequest
@@ -32,7 +31,7 @@ class HumanBeingService(private val repository: HumanBeingRepository) {
         return true
     }
 
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    @Transactional(readOnly = true)
     fun search(request: HumanBeingSearchRequest, sort: Sort): Page<HumanBeing> {
         val specification = HumanBeingSpecifications.matching(request)
 
