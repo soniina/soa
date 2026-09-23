@@ -92,8 +92,8 @@ export default {
   components: { AlertNotification, TeamManager, ExtraOperations, HeroTable, HeroModal },
   data() {
     return {
-      s1Url: 'https://localhost:28081',
-      s2Url: 'https://localhost:29081',
+      s1Url: 'https://se.ifmo.ru:28081',
+      s2Url: 'https://se.ifmo.ru:29081',
 
       heroes: [],
       totalCount: 0,
@@ -207,7 +207,7 @@ export default {
       try {
         const { count } = await this.colApi.countMoodLessThan(mood);
         this.moodCount = count;
-        this.successMessage = `Найдено: ${count}`;
+        this.error = null;
       } catch (e) {
         this.error = e;
       }

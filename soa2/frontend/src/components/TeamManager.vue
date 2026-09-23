@@ -75,7 +75,9 @@
     methods: {
       async loadMembers() {
         try {
-          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}`);
+          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}?t=${Date.now()}`, {
+            cache: 'no-store'
+          });
           if (res.ok) {
             this.members = await res.json();
           } else {
@@ -86,28 +88,47 @@
         }
       },
       async addHero() {
+        if (!this.newHeroId || !this.teamId) return;
+
+        const heroIdToAdd = this.newHeroId;
+        console.log(`Отправка запроса: добавление героя #${heroIdToAdd} в команду #${this.teamId}`);
+
         try {
-          const heroIdToAdd = this.newHeroId;
-          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}/add/${this.newHeroId}`, { method: 'POST' });
+          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}/add/${heroIdToAdd}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' }
+          });
+
           const data = await res.json().catch(() => ({}));
+
           if (!res.ok) {
-            this.$emit('notify-error', data.message ? data : { message: `Ошибка сервера (${res.status})` });
+            console.error("Ошибка от сервера:", data);
+            this.$emit('notify-error', data.message ? data : { message: `Ошибка при добавлении: статус ${res.status}` });
             return;
           }
-          this.members = data;
-          this.newHeroId = null;
-          this.$emit('notify-success', `Герой #${heroIdToAdd} добавлен в команду #${this.teamId}`);
-          this.newHeroId = null;
+
+          // Если сервер вернул обновлённый массив участников — сразу обновляем список!
+          if (Array.isArray(data)) {
+            this.members = data;
+          } else {
+            // Иначе принудительно запрашиваем свежий список участников
+            await this.loadMembers();
+          }
+
+          this.$emit('notify-success', `Герой #${heroIdToAdd} успешно добавлен в команду #${this.teamId}`);
+          this.newHeroId = null; // Очищаем поле ввода только после успеха
         } catch (e) {
-          this.$emit('notify-error', { message: 'Не удалось связаться с Сервисом 2' });
+          console.error("Ошибка сети:", e);
+          this.$emit('notify-error', { message: 'Не удалось связаться со Вторым сервисом (проверьте порт 29081)' });
         }
       },
+
       async remove(heroId) {
         try {
           const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}/remove/${heroId}`, { method: 'DELETE' });
           if (res.status === 204) {
+            this.members = this.members.filter(m => m.heroId !== heroId);
             this.$emit('notify-success', `Герой #${heroId} исключён из команды #${this.teamId}`);
-            this.loadMembers();
           } else {
             const err = await res.json();
             this.$emit('notify-error', err);
