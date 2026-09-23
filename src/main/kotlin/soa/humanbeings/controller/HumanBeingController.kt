@@ -20,6 +20,7 @@ import soa.humanbeings.service.HumanBeingService
 
 @RestController
 @RequestMapping("/human-beings")
+@CrossOrigin(origins = ["https://se.ifmo.ru"], exposedHeaders = ["X-Total-Count"])
 class HumanBeingController(
     private val service: HumanBeingService,
 ) {
