@@ -129,7 +129,7 @@ export default {
         impactSpeed: 0,
         weaponType: null,
         mood: 'APATHY',
-        car: { name: 'Без машины', cool: false }
+        car: null
       };
     },
     async loadHeroes() {

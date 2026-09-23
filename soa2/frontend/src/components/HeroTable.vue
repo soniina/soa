@@ -79,8 +79,11 @@
             <td>{{ h.weaponType || '—' }}</td>
             <td><span class="badge bg-secondary">{{ h.mood }}</span></td>
             <td>
-              {{ h.car?.name || '—' }}
-              <i v-if="h.car?.cool" class="bi bi-star-fill text-warning ms-1" title="Крутая!"></i>
+              <span v-if="h.car && h.car.name && h.car.name.trim()">
+                {{ h.car.name }}
+                <i v-if="h.car.cool" class="bi bi-star-fill text-warning ms-1" title="Крутая!"></i>
+              </span>
+              <span v-else class="text-muted small">—</span>
             </td>
             <td class="text-end">
               <button class="btn btn-outline-primary btn-sm me-1" @click="$emit('edit', h)">
