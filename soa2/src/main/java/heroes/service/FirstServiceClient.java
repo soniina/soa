@@ -17,8 +17,9 @@ import java.security.cert.X509Certificate;
 
 @ApplicationScoped
 public class FirstServiceClient {
+    private static final String BASE_URL = "https://localhost:28081/human-beings";
     // URL первого сервиса
-    private static final String BASE_URL = "https://localhost:8181/human-beings";
+    //private static final String BASE_URL = "https://localhost:8181/human-beings";
     private Client client;
 
     @PostConstruct

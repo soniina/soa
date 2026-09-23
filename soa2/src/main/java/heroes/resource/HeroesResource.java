@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Path("/heroes")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+//@Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class HeroesResource {
 
@@ -46,22 +46,22 @@ public class HeroesResource {
                     .build();
         }
 
-        // проверка существования героя в 1-м сервисе
-        HumanBeingDto hero = firstServiceClient.getHeroById(heroId);
-        if (hero == null) {
-            return Response.status(404)
-                    .entity(new ErrorResponseDto("HumanBeing с идентификатором " + heroId + " не найден"))
-                    .build();
-        }
-
         Map<Long, TeamMember> members = teamRepository.getTeamMembers(teamId);
+
+        // Если героя НЕТ в команде — проверяем по спецификации причину:
         if (!members.containsKey(heroId)) {
+            HumanBeingDto hero = firstServiceClient.getHeroById(heroId);
+            if (hero == null) {
+                return Response.status(404)
+                        .entity(new ErrorResponseDto("HumanBeing с идентификатором " + heroId + " не найден"))
+                        .build();
+            }
             return Response.status(404)
                     .entity(new ErrorResponseDto("Герой " + heroId + " не состоит в команде " + teamId))
                     .build();
         }
 
-        // уделение из состава команды
+        // Если герой ЕСТЬ в команде — успешно удаляем его!
         teamRepository.removeMember(teamId, heroId);
         return Response.status(Response.Status.NO_CONTENT).build(); // 204
     }
@@ -108,5 +108,37 @@ public class HeroesResource {
         }
 
         return Response.ok(updatedHeroes).build();
+    }
+    // Получить участников команды
+    @GET
+    @Path("/team/{team-id}")
+    public Response getTeamMembers(@PathParam("team-id") Long teamId) {
+        if (!teamRepository.teamExists(teamId)) {
+            return Response.status(404)
+                    .entity(new ErrorResponseDto("Команда с идентификатором " + teamId + " не найдена"))
+                    .build();
+        }
+        return Response.ok(new ArrayList<>(teamRepository.getTeamMembers(teamId).values())).build();
+    }
+
+    // Добавить героя в команду
+    @POST
+    @Path("/team/{team-id}/add/{hero-id}")
+    public Response addHeroToTeam(@PathParam("team-id") Long teamId,
+                                  @PathParam("hero-id") Long heroId) {
+        HumanBeingDto hero = firstServiceClient.getHeroById(heroId);
+        if (hero == null) {
+            return Response.status(404)
+                    .entity(new ErrorResponseDto("HumanBeing с идентификатором " + heroId + " не найден"))
+                    .build();
+        }
+        boolean hasRealCar = hero.getCar() != null
+                && hero.getCar().getName() != null
+                && !hero.getCar().getName().trim().isEmpty()
+                && !hero.getCar().getName().equalsIgnoreCase("Без машины")
+                && !hero.getCar().getName().equalsIgnoreCase("Пешком");
+
+        teamRepository.getTeamMembers(teamId).put(heroId, new TeamMember(heroId, hasRealCar));
+        return Response.ok(new ArrayList<>(teamRepository.getTeamMembers(teamId).values())).build();
     }
 }
