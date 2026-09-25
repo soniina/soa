@@ -47,31 +47,29 @@ public class FirstServiceClient {
     }
 
     public HumanBeingDto getHeroById(Long id) {
-        try {
-            Response response = client.target(BASE_URL)
+        try (Response response = client.target(BASE_URL)
                     .path(String.valueOf(id))
                     .request(MediaType.APPLICATION_JSON)
-                    .get();
+                    .get()) {
 
             if (response.getStatus() == 200) {
                 return response.readEntity(HumanBeingDto.class);
             }
-            return null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            if (response.getStatus() == 404) return null;
+            throw new IllegalStateException("Ошибка первого сервиса: " + response.getStatus());
         }
     }
 
     public HumanBeingDto updateHero(Long id, HumanBeingDto hero) {
-        Response response = client.target(BASE_URL)
+        try (Response response = client.target(BASE_URL)
                 .path(String.valueOf(id))
                 .request(MediaType.APPLICATION_JSON)
-                .put(Entity.entity(hero, MediaType.APPLICATION_JSON));
+                .put(Entity.entity(hero, MediaType.APPLICATION_JSON))) {
 
-        if (response.getStatus() == 200) {
-            return response.readEntity(HumanBeingDto.class);
+            if (response.getStatus() == 200) {
+                return response.readEntity(HumanBeingDto.class);
+            }
+            throw new IllegalStateException("Ошибка при обновлении героя: " + response.getStatus());
         }
-        throw new RuntimeException("Ошибка при обновлении героя: " + response.getStatus());
     }
 }

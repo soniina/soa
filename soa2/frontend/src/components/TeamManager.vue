@@ -27,8 +27,6 @@
           <div v-for="m in members" :key="m.heroId" class="d-flex justify-content-between align-items-center mb-1 bg-white p-1 rounded border-sm">
             <span class="small">
               <strong>Герой #{{ m.heroId }}</strong>
-              <span v-if="!m.hasCar" class="badge bg-danger ms-1">Без машины</span>
-              <span v-else class="badge bg-success ms-1">С машиной</span>
             </span>
             <button class="btn btn-outline-danger btn-sm py-0 px-1" title="Исключить" @click="remove(m.heroId)">
               <i class="bi bi-x"></i>

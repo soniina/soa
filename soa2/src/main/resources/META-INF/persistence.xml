@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.1">
+    <persistence-unit name="heroes" transaction-type="JTA">
+        <jta-data-source>java:app/jdbc/Heroes</jta-data-source>
+        <class>heroes.model.TeamMember</class>
+        <properties>
+            <property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>
+            <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+        </properties>
+    </persistence-unit>
+</persistence>

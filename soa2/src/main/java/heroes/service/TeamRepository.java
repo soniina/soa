@@ -1,38 +1,50 @@
 package heroes.service;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import heroes.model.TeamMember;
+import heroes.model.TeamMemberId;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 @ApplicationScoped
 public class TeamRepository {
-    private final Map<Long, Map<Long, TeamMember>> teams = new ConcurrentHashMap<>();
-
-
-    public TeamRepository() {
-        // предзаполнение тестовой команды ID = 7
-//        Map<Long, TeamMember> team7 = new ConcurrentHashMap<>();
-//        team7.put(101L, new TeamMember(101L, true));
-//        team7.put(102L, new TeamMember(102L, false));
-//        teams.put(7L, team7);
-    }
+    @PersistenceContext(unitName = "heroes")
+    private EntityManager entityManager;
 
     public boolean teamExists(Long teamId) {
-        return teamId != null && teamId > 0;
-
-//        return teams.containsKey(teamId);
-    }
-    public Map<Long, TeamMember> getTeamMembers(Long teamId) {
-
-//        return teams.get(teamId);
-        return teams.computeIfAbsent(teamId, k -> new ConcurrentHashMap<>());
+        return entityManager.createQuery(
+                        "SELECT COUNT(tm) FROM TeamMember tm WHERE tm.teamId = :teamId", Long.class)
+                .setParameter("teamId", teamId)
+                .getSingleResult() > 0;
     }
 
+    public List<TeamMember> getTeamMembers(Long teamId) {
+        return entityManager.createQuery(
+                        "SELECT tm FROM TeamMember tm WHERE tm.teamId = :teamId ORDER BY tm.heroId",
+                        TeamMember.class)
+                .setParameter("teamId", teamId)
+                .getResultList();
+    }
+
+    public boolean containsMember(Long teamId, Long heroId) {
+        return entityManager.find(TeamMember.class, new TeamMemberId(teamId, heroId)) != null;
+    }
+
+    @Transactional
+    public void addMember(Long teamId, Long heroId) {
+        if (!containsMember(teamId, heroId)) {
+            entityManager.persist(new TeamMember(teamId, heroId));
+        }
+    }
+
+    @Transactional
     public boolean removeMember(Long teamId, Long heroId) {
-        Map<Long, TeamMember> members = teams.get(teamId);
-        if (members == null) return false;
-        return members.remove(heroId) != null;
+        TeamMember member = entityManager.find(TeamMember.class, new TeamMemberId(teamId, heroId));
+        if (member == null) return false;
+        entityManager.remove(member);
+        return true;
     }
 }
