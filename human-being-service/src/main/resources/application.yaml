@@ -1,40 +1,5 @@
-server:
-  port: 9443
-  ssl:
-    enabled: true
-    key-store: ${SSL_KEY_STORE:file:./certs/localhost.p12}
-    key-store-type: PKCS12
-    key-store-password: ${SSL_KEY_STORE_PASSWORD:changeit}
-    key-alias: localhost
 spring:
   application:
     name: human-being-service
-  datasource:
-    url: jdbc:postgresql://pg:5432/studs
-    username: s409295
-  flyway:
-    baseline-on-migrate: true
-    baseline-version: 0
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: validate
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
-    healthcheck:
-      enabled: true
-  instance:
-    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
-    non-secure-port-enabled: false
-    secure-port-enabled: true
-    secure-port: ${server.port}
-    home-page-url: https://${eureka.instance.hostname}:${server.port}/human-beings
-    status-page-url: https://${eureka.instance.hostname}:${server.port}/actuator/info
-    health-check-url: https://${eureka.instance.hostname}:${server.port}/actuator/health
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}

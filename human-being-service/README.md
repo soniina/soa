@@ -8,3 +8,6 @@
 постраничный вывод, поиск по имени и подсчёт по настроению.
 
 Спецификация API находится в [openapi.yaml](../openapi.yaml).
+
+Перед запуском поднимите [Config Service](../config-service/README.md)
+и [Discovery Service](../discovery-service/README.md).
