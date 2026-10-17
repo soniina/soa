@@ -3,6 +3,12 @@ export class CollectionApi {
     this.getBaseUrl = getBaseUrl;
   }
 
+  async getHero(id) {
+    const res = await fetch(`${this.getBaseUrl()}/human-beings/${id}`, { cache: 'no-store' });
+    if (!res.ok) throw await this._extractError(res);
+    return await res.json();
+  }
+
   async getHeroes(params) {
     const query = new URLSearchParams();
     query.append('page', params.page || 1);

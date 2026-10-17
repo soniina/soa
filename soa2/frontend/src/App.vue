@@ -34,7 +34,9 @@
       <!-- Левая колонка -->
       <div class="col-lg-4">
         <TeamManager
+          ref="teamManager"
           :s2-url="s2Url"
+          :human-being-api-url="s1Url"
           @add-cars="onAddCars"
           @notify-success="msg => successMessage = msg"
           @notify-error="err => error = err"
@@ -92,8 +94,8 @@ export default {
   components: { AlertNotification, TeamManager, ExtraOperations, HeroTable, HeroModal },
   data() {
     return {
-      s1Url: 'https://se.ifmo.ru:28081',
-      s2Url: 'https://se.ifmo.ru:29081',
+      s1Url: 'https://helios.cs.ifmo.ru:28081',
+      s2Url: 'https://helios.cs.ifmo.ru:29081',
 
       heroes: [],
       totalCount: 0,
@@ -189,6 +191,7 @@ export default {
         }
         this.$refs.heroModal.hide();
         this.loadHeroes();
+        this.$refs.teamManager.loadMembers();
       } catch (e) {
         this.error = e;
       }
@@ -199,6 +202,7 @@ export default {
         await this.colApi.deleteHero(id);
         this.successMessage = `Герой #${id} удалён`;
         this.loadHeroes();
+        this.$refs.teamManager.loadMembers();
       } catch (e) {
         this.error = e;
       }
@@ -243,6 +247,7 @@ export default {
         const updated = await this.heroesApi.addCarToTeam(teamId);
         this.successMessage = `Машины выданы героям (изменено: ${updated.length})`;
         this.loadHeroes();
+        this.$refs.teamManager.loadMembers();
       } catch (e) {
         this.error = e;
       }

@@ -27,6 +27,9 @@
           <div v-for="m in members" :key="m.heroId" class="d-flex justify-content-between align-items-center mb-1 bg-white p-1 rounded border-sm">
             <span class="small">
               <strong>Герой #{{ m.heroId }}</strong>
+              <span class="text-muted ms-2">
+                {{ m.hero ? (m.hero.car?.name?.trim() || 'Без машины') : 'Данные о машине недоступны' }}
+              </span>
             </span>
             <button class="btn btn-outline-danger btn-sm py-0 px-1" title="Исключить" @click="remove(m.heroId)">
               <i class="bi bi-x"></i>
@@ -57,8 +60,10 @@
 </template>
 
 <script>
+  import { CollectionApi } from '../api/collectionApi';
+
   export default {
-    props: { s2Url: String },
+    props: { s2Url: String, humanBeingApiUrl: String },
     emits: ['add-cars', 'notify-success', 'notify-error'],
     data() {
       return {
@@ -67,8 +72,15 @@
         members: []
       };
     },
+    created() {
+      this.collectionApi = new CollectionApi(() => this.humanBeingApiUrl);
+    },
     mounted() {
       this.loadMembers();
+    },
+    watch: {
+      s2Url() { this.loadMembers(); },
+      humanBeingApiUrl() { this.loadMembers(); }
     },
     methods: {
       async loadMembers() {
@@ -76,13 +88,23 @@
           const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}?t=${Date.now()}`, {
             cache: 'no-store'
           });
-          if (res.ok) {
-            this.members = await res.json();
-          } else {
-            this.members = [];
+          if (!res.ok) {
+            throw await res.json().catch(() => ({ message: `Ошибка загрузки команды (${res.status})` }));
+          }
+
+          const members = await res.json();
+          const heroes = await Promise.allSettled(members.map(member => this.collectionApi.getHero(member.heroId)));
+          this.members = members.map((member, index) => ({
+            ...member,
+            hero: heroes[index].status === 'fulfilled' ? heroes[index].value : null
+          }));
+
+          if (heroes.some(hero => hero.status === 'rejected')) {
+            this.$emit('notify-error', { message: 'Не удалось загрузить данные о машинах некоторых участников команды' });
           }
         } catch (e) {
           this.members = [];
+          this.$emit('notify-error', { message: e.message || 'Не удалось загрузить состав команды' });
         }
       },
       async addHero() {
@@ -105,13 +127,7 @@
             return;
           }
 
-          // Если сервер вернул обновлённый массив участников — сразу обновляем список!
-          if (Array.isArray(data)) {
-            this.members = data;
-          } else {
-            // Иначе принудительно запрашиваем свежий список участников
-            await this.loadMembers();
-          }
+          await this.loadMembers();
 
           this.$emit('notify-success', `Герой #${heroIdToAdd} успешно добавлен в команду #${this.teamId}`);
           this.newHeroId = null; // Очищаем поле ввода только после успеха
