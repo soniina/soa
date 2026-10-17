@@ -4,6 +4,7 @@
 
 - `human-being-service/` — сервис персонажей на Kotlin, Spring Boot и Gradle.
 - `heroes-service/` — сервис команд на Java, JAX-RS и Maven.
+- `discovery-service/` — Eureka Server для регистрации экземпляров сервисов.
 - `frontend/` — общий клиент на Vue и Vite.
 
 Спецификация API находится в [openapi.yaml](openapi.yaml), Swagger UI — в [index.html](index.html).
