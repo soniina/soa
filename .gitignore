@@ -5,3 +5,5 @@ build/
 *.iml
 .DS_Store
 certs/
+node_modules/
+dist/

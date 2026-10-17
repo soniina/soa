@@ -1,0 +1,9 @@
+# SOA
+
+Два REST-сервиса и Vue-клиент для лабораторной работы по сервис-ориентированной архитектуре.
+
+- `human-being-service/` — сервис персонажей на Kotlin, Spring Boot и Gradle.
+- `heroes-service/` — сервис команд на Java, JAX-RS и Maven.
+- `frontend/` — общий клиент на Vue и Vite.
+
+Спецификация API находится в [openapi.yaml](openapi.yaml), Swagger UI — в [index.html](index.html).
