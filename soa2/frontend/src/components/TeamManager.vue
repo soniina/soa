@@ -1,7 +1,7 @@
 <template>
   <div class="card border-primary mb-4 shadow-sm">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-      <div><i class="bi bi-shield-shaded me-2"></i><strong>Сервис 2: Команды</strong></div>
+      <div><i class="bi bi-shield-shaded me-2"></i><strong>Сервис команд</strong></div>
       <span class="badge bg-light text-primary">Team #{{ teamId }}</span>
     </div>
     <div class="card-body">
@@ -63,7 +63,7 @@
   import { CollectionApi } from '../api/collectionApi';
 
   export default {
-    props: { s2Url: String, humanBeingApiUrl: String },
+    props: { heroesApiUrl: String, humanBeingApiUrl: String },
     emits: ['add-cars', 'notify-success', 'notify-error'],
     data() {
       return {
@@ -79,13 +79,13 @@
       this.loadMembers();
     },
     watch: {
-      s2Url() { this.loadMembers(); },
+      heroesApiUrl() { this.loadMembers(); },
       humanBeingApiUrl() { this.loadMembers(); }
     },
     methods: {
       async loadMembers() {
         try {
-          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}?t=${Date.now()}`, {
+          const res = await fetch(`${this.heroesApiUrl}/heroes/team/${this.teamId}?t=${Date.now()}`, {
             cache: 'no-store'
           });
           if (!res.ok) {
@@ -114,7 +114,7 @@
         console.log(`Отправка запроса: добавление героя #${heroIdToAdd} в команду #${this.teamId}`);
 
         try {
-          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}/add/${heroIdToAdd}`, {
+          const res = await fetch(`${this.heroesApiUrl}/heroes/team/${this.teamId}/add/${heroIdToAdd}`, {
             method: 'POST',
             headers: { 'Accept': 'application/json' }
           });
@@ -133,13 +133,13 @@
           this.newHeroId = null; // Очищаем поле ввода только после успеха
         } catch (e) {
           console.error("Ошибка сети:", e);
-          this.$emit('notify-error', { message: 'Не удалось связаться со Вторым сервисом (проверьте порт 29081)' });
+          this.$emit('notify-error', { message: 'Не удалось связаться с сервисом команд' });
         }
       },
 
       async remove(heroId) {
         try {
-          const res = await fetch(`${this.s2Url}/heroes/team/${this.teamId}/remove/${heroId}`, { method: 'DELETE' });
+          const res = await fetch(`${this.heroesApiUrl}/heroes/team/${this.teamId}/remove/${heroId}`, { method: 'DELETE' });
           if (res.status === 204) {
             this.members = this.members.filter(m => m.heroId !== heroId);
             this.$emit('notify-success', `Герой #${heroId} исключён из команды #${this.teamId}`);

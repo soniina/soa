@@ -1,7 +1,7 @@
 <template>
   <div class="card mb-4 shadow-sm">
     <div class="card-header bg-secondary text-white">
-      <i class="bi bi-search me-2"></i><strong>Спец-операции Сервиса 1</strong>
+      <i class="bi bi-search me-2"></i><strong>Операции с персонажами</strong>
     </div>
     <div class="card-body">
       <!-- 1. Mood Less Than -->

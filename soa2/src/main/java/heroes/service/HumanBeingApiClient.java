@@ -1,5 +1,6 @@
 package heroes.service;
 
+import heroes.dto.HumanBeingDto;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.client.Client;
@@ -7,7 +8,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import heroes.dto.HumanBeingDto;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -16,11 +16,8 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
 @ApplicationScoped
-public class FirstServiceClient {
-   // private static final String BASE_URL = "https://localhost:28081/human-beings";
+public class HumanBeingApiClient {
     private static final String BASE_URL = "https://127.0.0.1:28081/human-beings";
-    // URL первого сервиса
-    //private static final String BASE_URL = "https://localhost:8181/human-beings";
     private Client client;
 
     @PostConstruct
@@ -56,7 +53,7 @@ public class FirstServiceClient {
                 return response.readEntity(HumanBeingDto.class);
             }
             if (response.getStatus() == 404) return null;
-            throw new IllegalStateException("Ошибка первого сервиса: " + response.getStatus());
+            throw new IllegalStateException("Ошибка сервиса персонажей: " + response.getStatus());
         }
     }
 

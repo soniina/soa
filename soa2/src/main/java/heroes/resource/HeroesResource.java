@@ -4,7 +4,7 @@ import heroes.dto.CarDto;
 import heroes.dto.ErrorResponseDto;
 import heroes.dto.HumanBeingDto;
 import heroes.model.TeamMember;
-import heroes.service.FirstServiceClient;
+import heroes.service.HumanBeingApiClient;
 import heroes.service.TeamRepository;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -28,7 +28,7 @@ public class HeroesResource {
     private TeamRepository teamRepository;
 
     @Inject
-    private FirstServiceClient firstServiceClient;
+    private HumanBeingApiClient humanBeingApiClient;
 
     @DELETE
     @Path("/team/{team-id}/remove/{hero-id}")
@@ -44,7 +44,7 @@ public class HeroesResource {
             return teamNotFound(teamId);
         }
 
-        if (firstServiceClient.getHeroById(heroId) == null) {
+        if (humanBeingApiClient.getHeroById(heroId) == null) {
             return heroNotFound(heroId);
         }
 
@@ -72,7 +72,7 @@ public class HeroesResource {
 
         List<HumanBeingDto> updatedHeroes = new ArrayList<>();
         for (TeamMember member : teamRepository.getTeamMembers(teamId)) {
-            HumanBeingDto hero = firstServiceClient.getHeroById(member.getHeroId());
+            HumanBeingDto hero = humanBeingApiClient.getHeroById(member.getHeroId());
             if (hero == null || !hasNoCar(hero.getCar())) continue;
 
             if (hero.getCar() == null) {
@@ -80,7 +80,7 @@ public class HeroesResource {
             } else {
                 hero.getCar().setName("Красная Lada Kalina");
             }
-            updatedHeroes.add(firstServiceClient.updateHero(hero.getId(), hero));
+            updatedHeroes.add(humanBeingApiClient.updateHero(hero.getId(), hero));
         }
 
         return Response.ok(updatedHeroes).build();
@@ -106,7 +106,7 @@ public class HeroesResource {
                     .entity(new ErrorResponseDto("Идентификаторы должны быть положительными числами"))
                     .build();
         }
-        if (firstServiceClient.getHeroById(heroId) == null) {
+        if (humanBeingApiClient.getHeroById(heroId) == null) {
             return heroNotFound(heroId);
         }
 

@@ -22,7 +22,7 @@ export class HeroesApi {
     const data = await res.json().catch(() => ({}));
     return {
       status: res.status,
-      message: data.message || `Ошибка Сервиса 2 (${res.status})`,
+      message: data.message || `Ошибка сервиса команд (${res.status})`,
       violations: data.violations || []
     };
   }

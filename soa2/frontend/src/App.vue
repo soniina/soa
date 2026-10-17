@@ -4,18 +4,18 @@
     <div class="row align-items-center mb-4">
       <div class="col-md-6">
         <h2 class="mb-0 text-primary"><i class="bi bi-people-fill me-2"></i>Human Being & Heroes</h2>
-        <small class="text-muted">Единый клиент управления коллекцией (Сервис 1) и командами (Сервис 2)</small>
+        <small class="text-muted">Единый клиент управления персонажами и командами</small>
       </div>
       <div class="col-md-6">
         <div class="card p-2 bg-light mb-0 shadow-sm">
           <div class="row g-2">
             <div class="col-6">
-              <label class="form-label small mb-1">Сервис 1 URL:</label>
-              <input type="text" class="form-control form-control-sm" v-model="s1Url" @change="loadHeroes">
+              <label class="form-label small mb-1">URL сервиса персонажей:</label>
+              <input type="text" class="form-control form-control-sm" v-model="humanBeingApiUrl" @change="loadHeroes">
             </div>
             <div class="col-6">
-              <label class="form-label small mb-1">Сервис 2 URL:</label>
-              <input type="text" class="form-control form-control-sm" v-model="s2Url">
+              <label class="form-label small mb-1">URL сервиса команд:</label>
+              <input type="text" class="form-control form-control-sm" v-model="heroesApiUrl">
             </div>
           </div>
         </div>
@@ -35,8 +35,8 @@
       <div class="col-lg-4">
         <TeamManager
           ref="teamManager"
-          :s2-url="s2Url"
-          :human-being-api-url="s1Url"
+          :heroes-api-url="heroesApiUrl"
+          :human-being-api-url="humanBeingApiUrl"
           @add-cars="onAddCars"
           @notify-success="msg => successMessage = msg"
           @notify-error="err => error = err"
@@ -94,8 +94,8 @@ export default {
   components: { AlertNotification, TeamManager, ExtraOperations, HeroTable, HeroModal },
   data() {
     return {
-      s1Url: 'https://helios.cs.ifmo.ru:28081',
-      s2Url: 'https://helios.cs.ifmo.ru:29081',
+      humanBeingApiUrl: 'https://helios.cs.ifmo.ru:28081',
+      heroesApiUrl: 'https://helios.cs.ifmo.ru:29081',
 
       heroes: [],
       totalCount: 0,
@@ -115,8 +115,8 @@ export default {
     };
   },
   created() {
-    this.colApi = new CollectionApi(() => this.s1Url);
-    this.heroesApi = new HeroesApi(() => this.s2Url);
+    this.colApi = new CollectionApi(() => this.humanBeingApiUrl);
+    this.heroesApi = new HeroesApi(() => this.heroesApiUrl);
   },
   mounted() {
     this.loadHeroes();
