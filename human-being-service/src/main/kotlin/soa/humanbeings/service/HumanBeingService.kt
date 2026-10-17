@@ -1,0 +1,66 @@
+package soa.humanbeings.service
+
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import soa.humanbeings.dto.HumanBeingRequest
+import soa.humanbeings.dto.HumanBeingSearchRequest
+import soa.humanbeings.model.HumanBeing
+import soa.humanbeings.model.Mood
+import soa.humanbeings.repository.HumanBeingRepository
+import soa.humanbeings.repository.HumanBeingSpecifications
+
+@Service
+class HumanBeingService(private val repository: HumanBeingRepository) {
+    fun get(id: Long): HumanBeing? = repository.findById(id).orElse(null)
+
+    fun create(request: HumanBeingRequest): HumanBeing =
+        repository.save(applyRequest(HumanBeing(), request))
+
+    @Transactional
+    fun update(id: Long, request: HumanBeingRequest): HumanBeing? =
+        get(id)?.let { applyRequest(it, request) }
+
+    @Transactional
+    fun delete(id: Long): Boolean {
+        val human = get(id) ?: return false
+        repository.delete(human)
+        return true
+    }
+
+    fun search(request: HumanBeingSearchRequest, sort: Sort): Page<HumanBeing> {
+        val specification = HumanBeingSpecifications.matching(request)
+
+        if (request.page > Int.MAX_VALUE || (request.page - 1) * request.size > Int.MAX_VALUE) {
+            return PageImpl(emptyList(), PageRequest.of(0, request.size), repository.count(specification))
+        }
+
+        val stableSort = if (sort.getOrderFor("id") == null) sort.and(Sort.by("id")) else sort
+        return repository.findAll(
+            specification,
+            PageRequest.of((request.page - 1).toInt(), request.size, stableSort)
+        )
+    }
+
+    fun countMoodLessThan(mood: Mood): Long = repository.countByMoodIn(Mood.entries.take(mood.ordinal))
+
+    fun findByNameContains(substring: String): List<HumanBeing> =
+        repository.findByNameContainingOrderByIdAsc(substring)
+
+    fun findByNamePrefix(prefix: String): List<HumanBeing> =
+        repository.findByNameStartingWithOrderByIdAsc(prefix)
+
+    private fun applyRequest(human: HumanBeing, request: HumanBeingRequest): HumanBeing = human.apply {
+        name = request.name!!
+        coordinates = request.coordinates!!
+        realHero = request.realHero!!
+        hasToothpick = request.hasToothpick!!
+        impactSpeed = request.impactSpeed!!
+        weaponType = request.weaponType
+        mood = request.mood!!
+        car = request.car!!
+    }
+}
