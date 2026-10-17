@@ -14,24 +14,23 @@ import soa.humanbeings.repository.HumanBeingRepository
 import soa.humanbeings.repository.HumanBeingSpecifications
 
 @Service
-@Transactional
 class HumanBeingService(private val repository: HumanBeingRepository) {
-    @Transactional(readOnly = true)
     fun get(id: Long): HumanBeing? = repository.findById(id).orElse(null)
 
     fun create(request: HumanBeingRequest): HumanBeing =
         repository.save(applyRequest(HumanBeing(), request))
 
+    @Transactional
     fun update(id: Long, request: HumanBeingRequest): HumanBeing? =
         get(id)?.let { applyRequest(it, request) }
 
+    @Transactional
     fun delete(id: Long): Boolean {
         val human = get(id) ?: return false
         repository.delete(human)
         return true
     }
 
-    @Transactional(readOnly = true)
     fun search(request: HumanBeingSearchRequest, sort: Sort): Page<HumanBeing> {
         val specification = HumanBeingSpecifications.matching(request)
 
@@ -46,14 +45,11 @@ class HumanBeingService(private val repository: HumanBeingRepository) {
         )
     }
 
-    @Transactional(readOnly = true)
     fun countMoodLessThan(mood: Mood): Long = repository.countByMoodIn(Mood.entries.take(mood.ordinal))
 
-    @Transactional(readOnly = true)
     fun findByNameContains(substring: String): List<HumanBeing> =
         repository.findByNameContainingOrderByIdAsc(substring)
 
-    @Transactional(readOnly = true)
     fun findByNamePrefix(prefix: String): List<HumanBeing> =
         repository.findByNameStartingWithOrderByIdAsc(prefix)
 
