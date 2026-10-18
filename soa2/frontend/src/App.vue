@@ -92,8 +92,8 @@ export default {
   components: { AlertNotification, TeamManager, ExtraOperations, HeroTable, HeroModal },
   data() {
     return {
-      s1Url: 'https://se.ifmo.ru:28081',
-      s2Url: 'https://se.ifmo.ru:29081',
+      s1Url: 'https://helios.cs.ifmo.ru:28081',
+      s2Url: 'http://localhost:8085',
 
       heroes: [],
       totalCount: 0,

@@ -60,7 +60,11 @@
 
 <script>
   export default {
-    props: { s2Url: String },
+    props: { s2Url: {
+      type: String,
+      default: 'https://helios.cs.ifmo.ru:29081'
+      }
+    },
     emits: ['add-cars', 'notify-success', 'notify-error'],
     data() {
       return {

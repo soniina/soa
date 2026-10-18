@@ -1,33 +1,22 @@
 package heroes.service;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import heroes.model.TeamMember;
+import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ApplicationScoped
+@Repository
 public class TeamRepository {
+
     private final Map<Long, Map<Long, TeamMember>> teams = new ConcurrentHashMap<>();
-
-
-    public TeamRepository() {
-        // предзаполнение тестовой команды ID = 7
-//        Map<Long, TeamMember> team7 = new ConcurrentHashMap<>();
-//        team7.put(101L, new TeamMember(101L, true));
-//        team7.put(102L, new TeamMember(102L, false));
-//        teams.put(7L, team7);
-    }
 
     public boolean teamExists(Long teamId) {
         return teamId != null && teamId > 0;
-
-//        return teams.containsKey(teamId);
     }
-    public Map<Long, TeamMember> getTeamMembers(Long teamId) {
 
-//        return teams.get(teamId);
-        return teams.computeIfAbsent(teamId, k -> new ConcurrentHashMap<>());
+    public Map<Long, TeamMember> getTeamMembers(Long teamId) {
+        return teams.computeIfAbsent(teamId, id -> new ConcurrentHashMap<>());
     }
 
     public boolean removeMember(Long teamId, Long heroId) {

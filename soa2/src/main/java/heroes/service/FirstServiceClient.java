@@ -1,77 +1,53 @@
 package heroes.service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import heroes.dto.HumanBeingDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 
-@ApplicationScoped
+@Service
 public class FirstServiceClient {
-   // private static final String BASE_URL = "https://localhost:28081/human-beings";
-    private static final String BASE_URL = "https://127.0.0.1:28081/human-beings";
-    // URL первого сервиса
-    //private static final String BASE_URL = "https://localhost:8181/human-beings";
-    private Client client;
 
-    @PostConstruct
-    public void init() {
-        try {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        public X509Certificate[] getAcceptedIssuers() { return null; }
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                    }
-            };
+    @Value("${service1.url:http://localhost:8765/human-beings}")
+    private String baseUrl;
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new SecureRandom());
+    private final RestTemplate restTemplate;
 
-            this.client = ClientBuilder.newBuilder()
-                    .sslContext(sslContext)
-                    .hostnameVerifier((hostname, session) -> true)
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось инициализировать HTTPS клиент", e);
-        }
+    public FirstServiceClient(RestTemplateBuilder builder) {
+        this.restTemplate = builder
+                .setConnectTimeout(Duration.ofSeconds(3))
+                .setReadTimeout(Duration.ofSeconds(5))
+                .build();
     }
 
     public HumanBeingDto getHeroById(Long id) {
         try {
-            Response response = client.target(BASE_URL)
-                    .path(String.valueOf(id))
-                    .request(MediaType.APPLICATION_JSON)
-                    .get();
-
-            if (response.getStatus() == 200) {
-                return response.readEntity(HumanBeingDto.class);
-            }
+            return restTemplate.getForObject(baseUrl + "/" + id, HumanBeingDto.class);
+        } catch (HttpClientErrorException.NotFound e) {
             return null;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Ошибка вызова первого сервиса: " + e.getMessage());
             return null;
         }
     }
 
     public HumanBeingDto updateHero(Long id, HumanBeingDto hero) {
-        Response response = client.target(BASE_URL)
-                .path(String.valueOf(id))
-                .request(MediaType.APPLICATION_JSON)
-                .put(Entity.entity(hero, MediaType.APPLICATION_JSON));
-
-        if (response.getStatus() == 200) {
-            return response.readEntity(HumanBeingDto.class);
-        }
-        throw new RuntimeException("Ошибка при обновлении героя: " + response.getStatus());
+        ResponseEntity<HumanBeingDto> response = restTemplate.exchange(
+                baseUrl + "/" + id,
+                HttpMethod.PUT,
+                new HttpEntity<>(hero),
+                HumanBeingDto.class
+        );
+        return response.getBody();
     }
 }
