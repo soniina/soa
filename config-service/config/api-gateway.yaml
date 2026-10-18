@@ -25,4 +25,6 @@ zuul:
 human-being-service:
   ribbon:
     IsSecure: true
+    ConnectTimeout: 3000
+    ReadTimeout: 5000
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
