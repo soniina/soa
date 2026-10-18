@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://pg:5432/studs
+    username: s409295
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 0
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+eureka:
+  client:
+    jersey:
+      enabled: false
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: true
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:helios.cs.ifmo.ru}
+    instance-id: ${eureka.instance.hostname}:${spring.application.name}:${eureka.instance.secure-port}
+    non-secure-port-enabled: false
+    secure-port-enabled: true
+    secure-port: ${HUMAN_BEING_HTTPS_PORT:28081}
+    home-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/human-beings
+    status-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/info
+    health-check-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/health
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

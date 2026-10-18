@@ -1,0 +1,13 @@
+# Human Being Service
+
+Первый веб-сервис лабораторной работы по сервис-ориентированной архитектуре.
+Реализован на Kotlin и Spring Boot (Spring MVC), использует PostgreSQL и собирается Gradle.
+
+Сервис предоставляет REST API для управления коллекцией HumanBeing:
+создание, получение, изменение и удаление объектов, фильтрацию, сортировку,
+постраничный вывод, поиск по имени и подсчёт по настроению.
+
+Спецификация API находится в [openapi.yaml](../openapi.yaml).
+
+Перед запуском поднимите [Config Service](../config-service/README.md)
+и [Discovery Service](../discovery-service/README.md).
