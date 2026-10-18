@@ -94,7 +94,7 @@ export default {
   components: { AlertNotification, TeamManager, ExtraOperations, HeroTable, HeroModal },
   data() {
     return {
-      humanBeingApiUrl: 'https://helios.cs.ifmo.ru:28081',
+      humanBeingApiUrl: 'https://helios.cs.ifmo.ru:28082',
       heroesApiUrl: 'https://helios.cs.ifmo.ru:29081',
 
       heroes: [],

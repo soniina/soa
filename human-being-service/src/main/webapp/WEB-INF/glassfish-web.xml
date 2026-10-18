@@ -3,4 +3,5 @@
 <glassfish-web-app>
     <context-root>/</context-root>
     <class-loader delegate="false"/>
+    <scanning-exclude>eureka-client*</scanning-exclude>
 </glassfish-web-app>

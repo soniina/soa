@@ -9,6 +9,6 @@ Zuul и Ribbon на Spring Boot 2.3 / Spring Cloud Hoxton. Нужна Java 11.
 ./gradlew bootRun
 ```
 
-API доступен на https://localhost:8443/human-beings.
+API: https://helios.cs.ifmo.ru:28082/human-beings.
 Настройки — в `config-service/config/api-gateway.yaml`.
-Для HTTPS используется локальный сертификат Human Beings.
+Сертификат gateway — `certs/gateway.p12`, доверие к Human Beings — `certs/truststore.p12`.

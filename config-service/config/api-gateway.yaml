@@ -1,12 +1,15 @@
 server:
-  address: 127.0.0.1
-  port: 8443
+  address: 0.0.0.0
+  port: 28082
   ssl:
     enabled: true
-    key-store: ${SSL_KEY_STORE:file:../human-being-service/certs/localhost.p12}
+    key-store: ${SSL_KEY_STORE:file:./certs/gateway.p12}
     key-store-type: PKCS12
     key-store-password: ${SSL_KEY_STORE_PASSWORD:changeit}
-    key-alias: localhost
+    key-alias: gateway
+    trust-store: ${SSL_TRUST_STORE:file:./certs/truststore.p12}
+    trust-store-type: PKCS12
+    trust-store-password: ${SSL_TRUST_STORE_PASSWORD:changeit}
 eureka:
   client:
     register-with-eureka: false

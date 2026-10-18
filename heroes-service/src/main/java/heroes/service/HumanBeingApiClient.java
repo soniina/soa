@@ -17,7 +17,7 @@ import java.security.cert.X509Certificate;
 
 @ApplicationScoped
 public class HumanBeingApiClient {
-    private static final String BASE_URL = "https://127.0.0.1:28081/human-beings";
+    private static final String BASE_URL = "https://127.0.0.1:28082/human-beings";
     private Client client;
 
     @PostConstruct

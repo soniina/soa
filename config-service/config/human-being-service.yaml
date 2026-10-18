@@ -1,11 +1,3 @@
-server:
-  port: 9443
-  ssl:
-    enabled: true
-    key-store: ${SSL_KEY_STORE:file:./certs/localhost.p12}
-    key-store-type: PKCS12
-    key-store-password: ${SSL_KEY_STORE_PASSWORD:changeit}
-    key-alias: localhost
 spring:
   datasource:
     url: jdbc:postgresql://pg:5432/studs
@@ -19,18 +11,21 @@ spring:
       ddl-auto: validate
 eureka:
   client:
+    jersey:
+      enabled: false
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
     healthcheck:
       enabled: true
   instance:
-    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:helios.cs.ifmo.ru}
+    instance-id: ${eureka.instance.hostname}:${spring.application.name}:${eureka.instance.secure-port}
     non-secure-port-enabled: false
     secure-port-enabled: true
-    secure-port: ${server.port}
-    home-page-url: https://${eureka.instance.hostname}:${server.port}/human-beings
-    status-page-url: https://${eureka.instance.hostname}:${server.port}/actuator/info
-    health-check-url: https://${eureka.instance.hostname}:${server.port}/actuator/health
+    secure-port: ${HUMAN_BEING_HTTPS_PORT:28081}
+    home-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/human-beings
+    status-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/info
+    health-check-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/health
 management:
   endpoints:
     web:

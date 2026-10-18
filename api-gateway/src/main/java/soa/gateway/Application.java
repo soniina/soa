@@ -25,7 +25,8 @@ public class Application {
             throws Exception {
         Ssl ssl = serverProperties.getSsl();
         SSLContext context = SSLContexts.custom()
-                .loadTrustMaterial(ResourceUtils.getURL(ssl.getKeyStore()), ssl.getKeyStorePassword().toCharArray())
+                .setKeyStoreType(ssl.getTrustStoreType())
+                .loadTrustMaterial(ResourceUtils.getURL(ssl.getTrustStore()), ssl.getTrustStorePassword().toCharArray())
                 .build();
         return factory.createBuilder().setSSLContext(context).build();
     }
