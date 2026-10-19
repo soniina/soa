@@ -7,3 +7,14 @@ build/
 certs/
 node_modules/
 dist/
+
+soa2/
+tools/
+**/tools/
+*.dll
+*.exe
+
+**/target/
+*.jar
+*.war
+*.class

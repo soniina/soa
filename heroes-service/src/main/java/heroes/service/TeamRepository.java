@@ -2,16 +2,16 @@ package heroes.service;
 
 import heroes.model.TeamMember;
 import heroes.model.TeamMemberId;
-import jakarta.enterprise.context.ApplicationScoped;
+import org.springframework.stereotype.Repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
 
-@ApplicationScoped
+@Repository
 public class TeamRepository {
-    @PersistenceContext(unitName = "heroes")
+    @PersistenceContext
     private EntityManager entityManager;
 
     public boolean teamExists(Long teamId) {
