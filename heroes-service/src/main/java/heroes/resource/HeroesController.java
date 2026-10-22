@@ -99,10 +99,6 @@ public class HeroesController {
     // Вспомогательный: GET /heroes/team/{team-id} (для фронтенда)
     @GetMapping("/team/{team-id}")
     public ResponseEntity<?> getTeamMembers(@PathVariable("team-id") Long teamId) {
-        if (!teamRepository.teamExists(teamId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponseDto("Команда с идентификатором " + teamId + " не найдена"));
-        }
         return ResponseEntity.ok(teamRepository.getTeamMembers(teamId));
     }
 
