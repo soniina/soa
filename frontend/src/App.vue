@@ -95,7 +95,7 @@ export default {
   data() {
     return {
       humanBeingApiUrl: 'https://helios.cs.ifmo.ru:28082',
-      heroesApiUrl: 'http://localhost:8085',
+      heroesApiUrl: 'https://helios.cs.ifmo.ru:29085',
 
       heroes: [],
       totalCount: 0,

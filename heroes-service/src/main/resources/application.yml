@@ -1,6 +1,17 @@
 server:
-  port: 9081 # Порт по умолчанию для первого экземпляра
+  port: 9081
+
+spring:
+  datasource:
+    # При запуске локально через SSH-туннель:
+    url: jdbc:postgresql://127.0.0.1:15432/studs?sslmode=require
+    # (При запуске на Helios поменяется на: jdbc:postgresql://pg:5432/studs?sslmode=require)
+    username: s408391
+    password: "1gaLfGH4bkg4oTgg"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
 service1:
-  # URL шлюза Zuul, через который вызывается первый сервис, надо уточнить у Сони
-  url: http://localhost:8765/human-beings
+  url: https://localhost:28082/human-beings

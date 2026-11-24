@@ -66,7 +66,7 @@
     props: {
       heroesApiUrl: {
         type: String,
-        default: 'http://localhost:8085'
+        default: 'https://helios.cs.ifmo.ru:29085'
       },
       humanBeingApiUrl: {
         type: String,

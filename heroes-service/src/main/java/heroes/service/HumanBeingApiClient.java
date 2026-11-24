@@ -14,8 +14,9 @@ import java.time.Duration;
 
 @Service
 public class HumanBeingApiClient {
+    @Value("${service1.url:https://localhost:28082/human-beings}")
 
-    @Value("${service1.url:http://localhost:8765/human-beings}")
+    //@Value("${service1.url:http://localhost:8765/human-beings}")
     private String baseUrl;
 
     private final RestTemplate restTemplate;
